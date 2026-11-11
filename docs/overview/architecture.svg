@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1040" width="1800" height="1040" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <title>Takam Search architecture: browser, Vercel (web and API), database, daily job, CI/CD, Gemini</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#eaf0f8"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#334155"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="40" y="62" font-size="38" font-weight="800" fill="#0f172a">Takam Search</text>
+  <text x="40" y="96" font-size="20" fill="#475569">From the browser to the database, the daily job and the pipeline</text>
+
+  <!-- ============ BROWSER ============ -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="140" width="400" height="400" rx="18" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M40 158a18 18 0 0 1 18-18h364a18 18 0 0 1 18 18v42H40z" fill="#2563eb"/>
+  </g>
+  <text x="64" y="177" font-size="24" font-weight="700" fill="#ffffff">Browser</text>
+  <text x="64" y="224" font-size="25" font-weight="700" fill="#0f172a">React 19 + Vite + TypeScript</text>
+  <text x="64" y="264" font-size="20" fill="#334155">Home, search page, document panel</text>
+  <text x="64" y="296" font-size="20" fill="#334155">React Query (one cache of answers)</text>
+  <text x="64" y="328" font-size="20" fill="#334155">React Router: filters live in the URL</text>
+  <text x="64" y="360" font-size="20" fill="#334155">CSS Modules, light / dark, Hebrew RTL</text>
+  <text x="64" y="392" font-size="20" fill="#334155">Debounced typing (250 ms)</text>
+  <text x="64" y="424" font-size="20" fill="#334155">Opens the best match by itself</text>
+  <rect x="64" y="450" width="352" height="64" rx="12" fill="#f5f3ff" stroke="#c4b5fd"/>
+  <text x="84" y="478" font-size="18" font-weight="700" fill="#6d28d9">✦ Header switch: AI embeddings</text>
+  <text x="84" y="502" font-size="16" fill="#5b21b6">on / off, off by default (?meaning=yes)</text>
+
+  <!-- ============ VERCEL CONTAINER ============ -->
+  <rect x="490" y="130" width="940" height="480" rx="22" fill="#ffffff" fill-opacity="0.55" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
+  <g>
+    <rect x="514" y="112" width="132" height="36" rx="18" fill="#0f172a"/>
+    <path d="M552 123l12 20h-24z" fill="#ffffff"/>
+    <text x="574" y="137" font-size="19" font-weight="700" fill="#ffffff">Vercel</text>
+  </g>
+
+  <!-- Web app -->
+  <g filter="url(#shadow)">
+    <rect x="520" y="172" width="250" height="196" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M520 188a16 16 0 0 1 16-16h218a16 16 0 0 1 16 16v28H520z" fill="#3b82f6"/>
+  </g>
+  <text x="540" y="201" font-size="21" font-weight="700" fill="#ffffff">Web app (static)</text>
+  <text x="540" y="244" font-size="18" fill="#334155">takam-search.vercel.app</text>
+  <text x="540" y="274" font-size="18" fill="#334155">vite build → static files</text>
+  <text x="540" y="304" font-size="18" fill="#334155">every path → index.html</text>
+  <text x="540" y="334" font-size="18" fill="#334155">VITE_API_URL → the API</text>
+
+  <!-- API -->
+  <g filter="url(#shadow)">
+    <rect x="800" y="172" width="600" height="196" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M800 188a16 16 0 0 1 16-16h568a16 16 0 0 1 16 16v28H800z" fill="#e0234e"/>
+  </g>
+  <text x="820" y="201" font-size="21" font-weight="700" fill="#ffffff">API · NestJS (read-only, GET)</text>
+  <text x="1380" y="201" font-size="16" fill="#ffe4ea" text-anchor="end">takam-search-api.vercel.app</text>
+  <g font-size="19" font-weight="700" fill="#0f172a" text-anchor="middle">
+    <rect x="822" y="238" width="168" height="76" rx="12" fill="#fff1f2" stroke="#fda4af"/>
+    <text x="906" y="268">Controller</text>
+    <text x="906" y="294" font-size="15" font-weight="400" fill="#475569">route + parameters</text>
+    <rect x="1016" y="238" width="168" height="76" rx="12" fill="#fff1f2" stroke="#fda4af"/>
+    <text x="1100" y="268">Service</text>
+    <text x="1100" y="294" font-size="15" font-weight="400" fill="#475569">defaults, closest, AI</text>
+    <rect x="1210" y="238" width="168" height="76" rx="12" fill="#fff1f2" stroke="#fda4af"/>
+    <text x="1294" y="268">Repository</text>
+    <text x="1294" y="294" font-size="15" font-weight="400" fill="#475569">the search SQL</text>
+  </g>
+  <line x1="990" y1="276" x2="1014" y2="276" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1184" y1="276" x2="1208" y2="276" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="822" y="346" font-size="16" fill="#475569">GET /v1/documents · /chapters · /health · /:code/file</text>
+
+  <!-- Data files -->
+  <g filter="url(#shadow)">
+    <rect x="520" y="404" width="250" height="176" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M520 420a16 16 0 0 1 16-16h218a16 16 0 0 1 16 16v28H520z" fill="#64748b"/>
+  </g>
+  <text x="540" y="433" font-size="21" font-weight="700" fill="#ffffff">data/ (in git)</text>
+  <text x="540" y="478" font-size="18" fill="#334155">Document.json · 1126</text>
+  <text x="540" y="508" font-size="18" fill="#334155">Chapter.json · 114</text>
+  <text x="540" y="538" font-size="18" fill="#334155">embeddings.json · 922</text>
+  <text x="540" y="565" font-size="15" fill="#64748b">read when the database is empty</text>
+
+  <!-- Database -->
+  <g filter="url(#shadow)">
+    <rect x="800" y="404" width="600" height="176" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M800 420a16 16 0 0 1 16-16h568a16 16 0 0 1 16 16v28H800z" fill="#0f766e"/>
+  </g>
+  <text x="820" y="433" font-size="21" font-weight="700" fill="#ffffff">Database · PostgreSQL (PGlite, inside the API)</text>
+  <g font-size="18" fill="#0f172a">
+    <rect x="822" y="466" width="170" height="44" rx="10" fill="#f0fdfa" stroke="#99f6e4"/>
+    <text x="838" y="494">chapters · 122</text>
+    <rect x="1006" y="466" width="200" height="44" rx="10" fill="#f0fdfa" stroke="#99f6e4"/>
+    <text x="1022" y="494">documents · 922</text>
+    <rect x="1220" y="466" width="158" height="44" rx="10" fill="#f5f3ff" stroke="#c4b5fd"/>
+    <text x="1234" y="494" fill="#5b21b6">vector(768)</text>
+  </g>
+  <text x="822" y="540" font-size="16" fill="#334155">SQL functions: normalize_he() · search_terms() · has_term() · natural_key()</text>
+  <text x="822" y="564" font-size="16" fill="#334155">pgvector: cosine distance &lt;=&gt; on documents.embedding</text>
+
+  <!-- ============ EXTERNAL ============ -->
+  <g filter="url(#shadow)">
+    <rect x="1490" y="140" width="270" height="170" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M1490 156a16 16 0 0 1 16-16h238a16 16 0 0 1 16 16v28H1490z" fill="#7c3aed"/>
+  </g>
+  <text x="1510" y="169" font-size="21" font-weight="700" fill="#ffffff">Gemini API</text>
+  <text x="1510" y="214" font-size="18" fill="#334155">gemini-embedding-001</text>
+  <text x="1510" y="244" font-size="18" fill="#334155">768 numbers per text</text>
+  <text x="1510" y="274" font-size="16" fill="#64748b">question: at each search</text>
+  <text x="1510" y="296" font-size="16" fill="#64748b">documents: pnpm data:embed</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1490" y="350" width="270" height="210" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M1490 366a16 16 0 0 1 16-16h238a16 16 0 0 1 16 16v28H1490z" fill="#0e7490"/>
+  </g>
+  <text x="1510" y="379" font-size="21" font-weight="700" fill="#ffffff">Takam site (source)</text>
+  <text x="1510" y="424" font-size="18" fill="#334155">takam.mof.gov.il/api</text>
+  <text x="1510" y="454" font-size="18" fill="#334155">/Document · /Chapter</text>
+  <text x="1510" y="484" font-size="18" fill="#334155">/DocumentVersion → file id</text>
+  <text x="1510" y="514" font-size="18" fill="#334155">Word files (download)</text>
+  <text x="1510" y="544" font-size="15" fill="#64748b">the Word text is never read</text>
+
+  <!-- ============ GITHUB ============ -->
+  <rect x="40" y="650" width="1720" height="350" rx="22" fill="#ffffff" fill-opacity="0.55" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
+  <g>
+    <rect x="64" y="632" width="212" height="36" rx="18" fill="#24292f"/>
+    <circle cx="90" cy="650" r="9" fill="#ffffff"/>
+    <text x="108" y="657" font-size="19" font-weight="700" fill="#ffffff">GitHub Actions</text>
+  </g>
+
+  <!-- Daily job -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="700" width="470" height="270" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M70 716a16 16 0 0 1 16-16h438a16 16 0 0 1 16 16v28H70z" fill="#b45309"/>
+  </g>
+  <text x="90" y="729" font-size="21" font-weight="700" fill="#ffffff">Daily job · refresh-data (04:00 UTC)</text>
+  <g font-size="18" fill="#334155">
+    <text x="90" y="774">1. reads /Document and /Chapter again</text>
+    <text x="90" y="806">2. checks the answer looks right</text>
+    <text x="90" y="838">3. builds the database to prove it loads</text>
+    <text x="90" y="870">4. runs the server tests</text>
+    <text x="90" y="902">5. commits the new data to main</text>
+    <text x="90" y="934">6. starts the CI/CD pipeline</text>
+  </g>
+
+  <!-- Pipeline -->
+  <g filter="url(#shadow)">
+    <rect x="600" y="700" width="1130" height="270" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M600 716a16 16 0 0 1 16-16h1098a16 16 0 0 1 16 16v28H600z" fill="#24292f"/>
+  </g>
+  <text x="620" y="729" font-size="21" font-weight="700" fill="#ffffff">CI/CD · the only road to production</text>
+  <g font-size="19" font-weight="700" fill="#0f172a">
+    <rect x="624" y="770" width="240" height="150" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="640" y="802">1 · Checks</text>
+    <text x="640" y="832" font-size="16" font-weight="400" fill="#475569">lint · types · build</text>
+    <text x="640" y="856" font-size="16" font-weight="400" fill="#475569">server tests (SQL, API)</text>
+    <text x="640" y="880" font-size="16" font-weight="400" fill="#475569">web tests (components)</text>
+
+    <rect x="900" y="770" width="240" height="150" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="916" y="802">2 · End-to-end</text>
+    <text x="916" y="832" font-size="16" font-weight="400" fill="#475569">Playwright, phone + desktop</text>
+    <text x="916" y="856" font-size="16" font-weight="400" fill="#475569">real server, real build</text>
+    <text x="916" y="880" font-size="16" font-weight="400" fill="#475569">accessibility (axe), 2 themes</text>
+
+    <rect x="1176" y="770" width="240" height="150" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
+    <text x="1192" y="802">3 · Deploy</text>
+    <text x="1192" y="832" font-size="16" font-weight="400" fill="#475569">only a push to main,</text>
+    <text x="1192" y="856" font-size="16" font-weight="400" fill="#475569">only if 1 and 2 passed:</text>
+    <text x="1192" y="880" font-size="16" font-weight="400" fill="#475569">the API, then the web app</text>
+
+    <rect x="1452" y="770" width="254" height="150" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
+    <text x="1468" y="802">4 · Live checks</text>
+    <text x="1468" y="832" font-size="16" font-weight="400" fill="#475569">12 smoke tests on the real</text>
+    <text x="1468" y="856" font-size="16" font-weight="400" fill="#475569">site: search, AI key, file</text>
+    <text x="1468" y="880" font-size="16" font-weight="400" fill="#475569">link, CORS, web app</text>
+  </g>
+  <line x1="864" y1="845" x2="898" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1140" y1="845" x2="1174" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1416" y1="845" x2="1450" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="620" y="952" font-size="16" fill="#64748b">A failing step stops everything after it. Nobody deploys from a laptop.</text>
+
+  <!-- ============ ARROWS BETWEEN BLOCKS ============ -->
+  <!-- browser -> web app -->
+  <line x1="440" y1="270" x2="518" y2="270" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="476" y="258" font-size="15" fill="#2563eb" text-anchor="middle">loads</text>
+  <!-- browser -> API (over the top) -->
+  <path d="M240 140 V110 H1100 V170" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="660" y="102" font-size="16" font-weight="600" fill="#2563eb">GET /v1/documents?q=…&amp;chapter=…&amp;meaning=yes   (debounced, JSON)</text>
+  <!-- repository -> database -->
+  <line x1="1294" y1="314" x2="1294" y2="402" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow-green)"/>
+  <text x="1282" y="366" font-size="15" fill="#0f766e" text-anchor="end">SQL, values as parameters</text>
+  <!-- data files -> database -->
+  <line x1="770" y1="492" x2="798" y2="492" stroke="#475569" stroke-width="3" marker-end="url(#arrow)"/>
+  <!-- api -> gemini -->
+  <line x1="1400" y1="230" x2="1488" y2="230" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrow-violet)"/>
+  <text x="1444" y="220" font-size="15" fill="#7c3aed" text-anchor="middle">question</text>
+  <!-- api -> takam site (file) -->
+  <path d="M1400 330 L1430 330 L1430 400 L1488 400" fill="none" stroke="#0e7490" stroke-width="3" marker-end="url(#arrow)"/>
+  <!-- daily job -> data files (commit) -->
+  <path d="M530 698 V582" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="522" y="640" font-size="15" fill="#b45309" text-anchor="end">commits new data</text>
+  <!-- daily job -> takam site (reads) -->
+  <path d="M540 740 H578 V626 H1625 V562" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1100" y="644" font-size="15" fill="#b45309" text-anchor="middle">reads the site every day</text>
+  <!-- daily job -> pipeline -->
+  <line x1="540" y1="845" x2="598" y2="845" stroke="#334155" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="569" y="832" font-size="14" fill="#475569" text-anchor="middle">starts</text>
+  <!-- pipeline -> vercel -->
+  <line x1="1296" y1="768" x2="1296" y2="612" stroke="#0f172a" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1308" y="690" font-size="15" font-weight="600" fill="#0f172a">deploys the API and the web app</text>
+</svg>

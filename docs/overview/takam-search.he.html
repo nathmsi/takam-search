@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Takam Search: הבעיה, הפתרון והארכיטקטורה</title>
+<style>
+  @font-face {
+    font-family: 'Heebo';
+    src: url('../../apps/web/node_modules/@fontsource-variable/heebo/files/heebo-hebrew-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+  }
+  @font-face {
+    font-family: 'Heebo';
+    src: url('../../apps/web/node_modules/@fontsource-variable/heebo/files/heebo-latin-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  :root {
+    --ink: #0f172a;
+    --muted: #475569;
+    --line: #d6dde8;
+    --soft: #f1f5f9;
+    --accent: #1d4ed8;
+    --accent-soft: #e8efff;
+    --warn: #b45309;
+    --ai: #6d28d9;
+    --ai-soft: #f5f3ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Heebo', Arial, sans-serif;
+    font-size: 11.5pt;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  h1, h2, h3 { line-height: 1.25; margin: 0; }
+  .cover { padding-bottom: 14pt; border-bottom: 3px solid var(--accent); margin-bottom: 18pt; }
+  .cover h1 { font-size: 30pt; font-weight: 800; letter-spacing: -0.5pt; }
+  .cover .sub { font-size: 14pt; color: var(--muted); margin-top: 4pt; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4pt 18pt; margin-top: 10pt; font-size: 10pt; color: var(--muted); }
+  .meta a { color: var(--accent); text-decoration: none; }
+  h2 { font-size: 17pt; font-weight: 800; margin: 20pt 0 8pt; color: var(--accent); }
+  h2 .n { display: inline-block; min-width: 24pt; height: 24pt; line-height: 24pt; text-align: center; margin-inline-start: 8pt; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12pt; }
+  p { margin: 0 0 8pt; }
+  ul { margin: 0 0 8pt; padding-inline-start: 20pt; }
+  li { margin-bottom: 4pt; }
+  code, .ltr { direction: ltr; unicode-bidi: isolate; font-family: 'SF Mono', Menlo, monospace; font-size: 0.88em; background: var(--soft); padding: 0 3pt; border-radius: 3pt; }
+  .callout { border-inline-start: 4px solid var(--accent); background: var(--accent-soft); padding: 9pt 12pt; border-radius: 4pt; margin: 8pt 0 10pt; }
+  .callout.ai { border-inline-start-color: var(--ai); background: var(--ai-soft); }
+  .callout b { font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 10.5pt; }
+  th, td { text-align: start; padding: 5pt 8pt; border: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--soft); font-weight: 700; }
+  .small { font-size: 9.5pt; color: var(--muted); }
+  figure { margin: 8pt 0 6pt; break-inside: avoid; }
+  figure img { width: 100%; display: block; border: 1px solid var(--line); border-radius: 6pt; }
+  figcaption { font-size: 9.5pt; color: var(--muted); margin-top: 4pt; text-align: center; }
+  .pkgs td:first-child { white-space: nowrap; font-weight: 700; }
+  section { break-inside: auto; }
+  h2, .callout, table, figure { break-after: avoid-page; }
+  tr, .callout { break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <h1>Takam Search</h1>
+  <div class="sub">חיפוש טוב יותר בהוראות תכ"ם: הבעיה, הפתרון והארכיטקטורה</div>
+  <div class="meta">
+    <span>נתן מסיקה · 11.11.2026</span>
+    <span>האתר: <a class="ltr" href="https://takam-search.vercel.app">takam-search.vercel.app</a></span>
+    <span>הקוד: <a class="ltr" href="https://github.com/nathmsi/takam-search">github.com/nathmsi/takam-search</a></span>
+  </div>
+</header>
+
+<section>
+  <h2><span class="n">1</span>הבעיות שמצאתי באתר תכ"ם</h2>
+  <p>אתר הוראות תכ"ם (<span class="ltr">takam.mof.gov.il</span>) הוא המקום שבו עובדי משרדי הממשלה מחפשים את ההנחיות המחייבות של החשב הכללי. השתמשתי באתר, קראתי את הקוד שלו וקראתי ל-API הציבורי שלו (1,126 מסמכים, 114 פרקים). אלה הממצאים:</p>
+  <ul>
+    <li><b>החיפוש לא מוצא:</b> יחיד ורבים הן שתי מילים שונות, שאלה לא מחזירה כלום (הבעיה המרכזית, בפרק הבא).</li>
+    <li><b>דף שנשבר כשאין תוצאות:</b> הכתובת הופכת ל-<code>/document/undefined</code> וחלונית הפרטים נשארת ריקה, בלי שום עזרה.</li>
+    <li><b>דגל התוקף הפוך:</b> <code>isvalid</code> הוא <code>true</code> דווקא ב-51 מסמכים שתוקפם פג, והאתר מסתיר זאת בקוד (<code>isvalid == 1 ? "לא" : "כן"</code>).</li>
+    <li><b>פרק שלם חסר בסינון:</b> פרק 10, "ניהול מלאי ומצאי" (21 הוראות), לא מופיע ב-<code>/api/Chapter</code>, והרשימה קופצת מ-9 ל-11.</li>
+    <li><b>11 הוראות לא מוצגות בעץ,</b> וחיפוש לפי המספר שלהן לא מוצא אותן. ל-7 מהן התיאור אומר שאוחדו או שמספרן שונה, כנראה במכוון.</li>
+    <li><b>סינון התגיות מת:</b> <code>/api/Tag</code> ריק ואין מסמך עם תגית.</li>
+    <li><b>כל הרשימה יורדת בכל ביקור</b> (75KB דחוסים, 1,126 מסמכים) ומסוננת בדפדפן.</li>
+    <li><b>התנהגויות API תמוהות:</b> מזהה קובץ שגוי מחזיר 503 עם HTML, כתובת לא קיימת מחזירה 200 עם דף הבית, קובצי Word מוגשים כ-<code>application/octetstream</code>, וכותרות ה-CORS מכריזות על פעולות כתיבה שלא אמורות להתאפשר.</li>
+  </ul>
+  <p class="small">לא מדדתי את ההשפעה על משתמשים אמיתיים. ההנחה שהם מבזבזים זמן או מיישמים הוראה לא נכונה היא השערה סבירה, לא מדידה.</p>
+</section>
+
+<section>
+  <h2><span class="n">2</span>הבעיה המרכזית שבחרתי לפתור: החיפוש</h2>
+  <p>אדם עם מצב קונקרטי, למשל "מה עושים אם חרגנו מהתקציב?", לא מצליח להגיע בוודאות להוראה שחלה עליו. בקוד האתר (<code>filterByFreeTxt</code>) הטקסט החופשי מושווה לארבעה שדות בלבד (כותרת, תיאור, מילות מפתח, מספר) באמצעות "מכיל" פשוט: מילה חייבת להיכתב בדיוק כמו בכותרת.</p>
+  <table>
+    <thead><tr><th>מה מקלידים</th><th>מה האתר עושה</th></tr></thead>
+    <tbody>
+      <tr><td>‏<bdi>קופת ביטחון</bdi>, ואחר כך <bdi>קופות ביטחון</bdi></td><td>2 תוצאות ואז 4: היחיד לא מוצא את הרבים</td></tr>
+      <tr><td><bdi>התחייבות</bdi>, ואחר כך <bdi>התחייבויות</bdi></td><td>11 תוצאות ואז 5</td></tr>
+      <tr><td><bdi>מקדמות ללא התחייבות</bdi></td><td>0 תוצאות, למרות שההוראות על מקדמות (1.4.5) ועל תשלומים ללא התחייבות (1.5.1) קיימות</td></tr>
+      <tr><td><bdi>מה עושים כשיש חריגה</bdi></td><td>0 תוצאות: שאלה היא לא כותרת</td></tr>
+      <tr><td>כל חיפוש בלי תוצאה</td><td>הכתובת הופכת ל-<code>/document/undefined</code> והדף נשאר ריק</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>למה דווקא החיפוש?</b> כי זו הדרך שבה כמעט כל משתמש מגיע להוראה. שאר הליקויים (דגל התוקף, פרק חסר) פוגעים בדיוק, אבל כשהחיפוש לא מוצא, אין עוד מה לתקן: ההוראה הנכונה פשוט לא מגיעה אל האדם.</div>
+</section>
+
+<section>
+  <h2><span class="n">3</span>הפתרון בקצרה</h2>
+  <p>אותם מסמכים, אבל החיפוש נעשה בשרת, ב-SQL, על עמודות מנוקות:</p>
+  <ul>
+    <li><b>יחיד ורבים הם אותה מילה;</b> גרשיים בתוך מילה לא משנים (<bdi>דו"ח</bdi> = <bdi>דוח</bdi>); מילות שאלה (<bdi>מה</bdi>, <bdi>האם</bdi>, <bdi>כשיש</bdi>) מתעלמים מהן.</li>
+    <li><b>כל המילים חייבות להופיע. אם אין מסמך כזה, מוצגים הקרובים ביותר והתשובה אומרת זאת.</b> שאלה לא נגמרת בדף ריק.</li>
+    <li><b>דירוג:</b> מילה בכותרת או במספר שווה יותר ממילה בתיאור, ובשוויון הסדר הוא סדר המספרים (1.2 לפני 1.10).</li>
+    <li><b>סינון בשרת:</b> פרק, תת-פרק, סוג מידע ותוקף, כשהתוקף מחושב מהתאריכים ולא מהדגל ההפוך.</li>
+    <li><b>"לא נמצא" היא תשובה תקינה,</b> עם כתובת תקינה וכפתור לניקוי הסינון.</li>
+    <li><b>ההוראה הטובה ביותר נפתחת מיד</b> במסך רחב, בלי שצריך ללחוץ.</li>
+  </ul>
+  <p>החיפוש עובד על נתוני העל של האובייקטים של האתר בלבד (כותרת, תיאור, מילות מפתח, מספר, תאריכים, פרקים). תוכן קובצי ה-Word אינו נקרא.</p>
+</section>
+
+<section>
+  <h2><span class="n">4</span>הארכיטקטורה: <bdi>monorepo</bdi> עם <bdi>React, Vite, NestJS</bdi> ובסיס נתונים</h2>
+  <p>הפרויקט הוא <span class="ltr">monorepo</span> אחד (<span class="ltr">pnpm</span>), וכולו ב-<span class="ltr">TypeScript</span>:</p>
+  <table class="pkgs">
+    <thead><tr><th>חבילה</th><th>מה יש בה</th></tr></thead>
+    <tbody>
+      <tr><td class="ltr">apps/web</td><td><b>הלקוח:</b> <span class="ltr">React 19 + Vite + TypeScript</span>. <span class="ltr">React Query</span> (מטמון אחד של תשובות), <span class="ltr">React Router</span> (הסינון חי בכתובת, כך שאפשר לשתף חיפוש), <span class="ltr">CSS Modules</span>, עברית מימין לשמאל, מצב בהיר וכהה. מבנה הדפים כמו באתר המקורי.</td></tr>
+      <tr><td class="ltr">apps/server</td><td><b>השרת:</b> <span class="ltr">NestJS</span>, תיקייה לכל route, ובכל אחת <span class="ltr">controller → service → repository</span>. קריאה בלבד (<span class="ltr">GET</span>).</td></tr>
+      <tr><td class="ltr">packages/contracts</td><td>הטיפוסים המשותפים ללקוח ולשרת: אם צד אחד משתנה בלי השני, בדיקת הטיפוסים נכשלת.</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li><b>בסיס הנתונים:</b> <span class="ltr">PostgreSQL</span> אמיתי שרץ בתוך השרת (<span class="ltr">PGlite</span>), בלי שום התקנה. שתי טבלאות (<code>chapters</code>, <code>documents</code>) ופונקציות SQL שמנקות עברית (<code>normalize_he()</code>, <code>search_terms()</code>). הנתונים נטענים משני קובצי JSON, האובייקטים של אתר תכ"ם, כשהבסיס ריק. החיפוש כולו הוא שאילתת SQL אחת שאפשר לקרוא.</li>
+    <li><b>המשימה היומית:</b> פעם ביום <span class="ltr">GitHub Actions</span> קורא שוב את האתר, בודק שהתשובה נראית תקינה, מוודא שהבסיס נבנה ממנה, מריץ את בדיקות השרת, מבצע <span class="ltr">commit</span> ומפעיל את ה-<span class="ltr">CI/CD</span>. כך הנתונים מתעדכנים בלי יד אדם.</li>
+    <li><b>CI/CD, הדרך היחידה לפרודקשן:</b> בדיקות (<span class="ltr">lint</span>, טיפוסים, <span class="ltr">build</span>, בדיקות יחידה בשרת ובלקוח) ← בדיקות קצה-לקצה (<span class="ltr">Playwright</span>, טלפון ושולחן עבודה, נגישות) ← פריסה ל-<span class="ltr">Vercel</span>, רק מ-<span class="ltr">main</span> ורק אחרי שהכול עבר ← 12 בדיקות על האתר החי. אף אחד לא פורס ממחשב אישי.</li>
+    <li><b>בדיקות:</b> 141 בשרת (ה-SQL האמיתי על הנתונים האמיתיים), 89 בלקוח ו-100 בדיקות קצה-לקצה.</li>
+  </ul>
+  <figure>
+    <img src="architecture.png" alt="תרשים ארכיטקטורה: דפדפן, Vercel (אתר ו-API), בסיס נתונים, משימה יומית, CI/CD ו-Gemini">
+    <figcaption>מהדפדפן ועד בסיס הנתונים, כולל המשימה היומית וה-CI/CD (שמות טכניים באנגלית)</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="n">5</span>תוספת: חיפוש לפי משמעות, מתג שאפשר להפעיל ולכבות</h2>
+  <p>בסוף הוספתי יכולת שאפשר <b>להפעיל או לכבות</b>: כפתור קטן (✦) בכותרת העליונה של דפי החיפוש. הוא כבוי כברירת מחדל, ואז החיפוש הוא החיפוש במילים שתואר למעלה. כשמדליקים אותו, השרת מבקש מ-<span class="ltr">Gemini</span> וקטור (<span class="ltr">embedding</span>, 768 מספרים) לשאלה, ומשווה אותו לעמודה מסוג <span class="ltr">pgvector</span> (<code>documents.embedding</code>) שיש בה וקטור לכל אחד מ-922 המסמכים, שנוצר מהכותרת, התיאור ומילות המפתח.</p>
+  <div class="callout ai">
+    <b>דוגמה:</b> השאלה <bdi>"אפשר לשלם לספק לפני שקיבלתי את הסחורה"</bdi>. החיפוש במילים מחזיר הוראות על רכב ועל מלונות. החיפוש לפי משמעות מעלה לראש הרשימה את ההוראות 1.4.2 ו-1.4.5 (תשלום מקדמות), בלי שאף אחת מהמילים האלה מופיעה בכותרת.
+  </div>
+  <ul>
+    <li><b>היברידי:</b> מילים מדויקות ומספר הוראה ממשיכים לשקול, והמשמעות מוסיפה.</li>
+    <li><b>בטוח לכבות:</b> בלי מפתח <span class="ltr">Gemini</span> בשרת, החיפוש לפי משמעות עונה בשגיאה ברורה (503) והחיפוש במילים לא מושפע.</li>
+    <li><b>זה ניסוי:</b> הוא מבוסס על נתוני העל בלבד, לא על תוכן קובצי ה-Word. השלב הבא האפשרי הוא להוסיף את תוכן המסמכים ותשובה שה-AI כותב (<span class="ltr">RAG</span>) עם הפניה למקורות.</li>
+  </ul>
+</section>
+
+</body>
+</html>
