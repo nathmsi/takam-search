@@ -59,8 +59,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Install Chromium
-        run: pnpm --filter @takam/web exec playwright install --with-deps chromium
+      - name: Install Chromium (up to 3 tries, the package mirror of the runner fails now and then)
+        run: |
+          for attempt in 1 2 3; do
+            pnpm --filter @takam/web exec playwright install --with-deps chromium && exit 0
+            echo "Attempt $attempt failed"; sleep 15
+          done
+          exit 1
       - name: E2E tests on the builds, with the real server and the real web app
         run: pnpm --filter @takam/web exec playwright test
       - name: Playwright report
