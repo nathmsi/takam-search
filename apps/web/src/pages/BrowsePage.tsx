@@ -137,7 +137,7 @@ export function BrowsePage() {
               ) : q.trim() === '' ? (
                 <TreeList key={`${chapter}|${type}|${inForce}`} items={list.data.items} total={list.data.total} selectedCodeText={codeText} search={search} />
               ) : (
-                <ResultList items={list.data.items} total={list.data.total} relaxed={list.data.relaxed} meaning={list.data.meaning} selectedCodeText={codeText} search={search} />
+                <ResultList items={list.data.items} total={list.data.total} relaxed={list.data.relaxed} meaning={list.data.meaning} meaningUnavailable={list.data.meaningUnavailable} selectedCodeText={codeText} search={search} />
               )}
             </div>
           ) : null}

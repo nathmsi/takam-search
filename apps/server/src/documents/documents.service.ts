@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import type { DocumentDetailDto, DocumentDto, DocumentListDto } from '@takam/contracts';
 import { AiService } from '../ai/ai.service';
 import { DocumentsRepository } from './documents.repository';
@@ -28,18 +28,32 @@ export class DocumentsService {
       limit: query.limit ?? 50,
       offset: query.offset ?? 0,
     } as const;
-    if (query.meaning === 'yes' && request.words !== '') return this.listByMeaning(request);
-    const exact: SearchPage = await this.repository.search({ ...request, mode: 'all' });
-    if (exact.total > 0 || request.words.trim() === '') return { ...exact, relaxed: false, meaning: false };
-    const closest: SearchPage = await this.repository.search({ ...request, mode: 'any' });
-    return { ...closest, relaxed: closest.total > 0, meaning: false };
+    if (query.meaning !== 'yes' || request.words === '') return this.listByWords(request, false);
+    const embedding: number[] | null = await this.embed(request.words);
+    if (embedding === null) return this.listByWords(request, true);
+    const page: SearchPage = await this.repository.searchByMeaning({ ...request, embedding });
+    return { ...page, relaxed: false, meaning: true, meaningUnavailable: false };
   }
 
-  /** The experiment: the question becomes an embedding (AI), the database orders the documents by closeness to it. */
-  private async listByMeaning(request: Omit<MeaningSearchRequest, 'embedding'>): Promise<DocumentListDto> {
-    const embedding: number[] = await this.ai.embedQuestion(request.words);
-    const page: SearchPage = await this.repository.searchByMeaning({ ...request, embedding });
-    return { ...page, relaxed: false, meaning: true };
+  /** The search by words: every word, or, when no document has them all, the closest ones. */
+  private async listByWords(request: Omit<MeaningSearchRequest, 'embedding'>, meaningUnavailable: boolean): Promise<DocumentListDto> {
+    const exact: SearchPage = await this.repository.search({ ...request, mode: 'all' });
+    if (exact.total > 0 || request.words.trim() === '') return { ...exact, relaxed: false, meaning: false, meaningUnavailable };
+    const closest: SearchPage = await this.repository.search({ ...request, mode: 'any' });
+    return { ...closest, relaxed: closest.total > 0, meaning: false, meaningUnavailable };
+  }
+
+  /**
+   * The experiment: the question becomes an embedding (AI). `null` when the AI cannot answer (no key, quota spent, provider
+   * down): the caller falls back on the search by words instead of failing. Any other error is a bug and goes on.
+   */
+  private async embed(words: string): Promise<number[] | null> {
+    try {
+      return await this.ai.embedQuestion(words);
+    } catch (error) {
+      if (error instanceof ServiceUnavailableException) return null;
+      throw error;
+    }
   }
 
   async get(codeText: string): Promise<DocumentDetailDto> {

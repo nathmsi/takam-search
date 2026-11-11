@@ -55,10 +55,11 @@ const checks = [
     assert.equal(list.relaxed, true);
     assert.ok(list.items.length > 0);
   }],
-  ['the search by meaning answers (the AI key works)', async () => {
+  ['the search by meaning answers: by meaning, or by words when the AI is down (never an error)', async () => {
     const list = await json(`/v1/documents?q=${encodeURIComponent('ספק לא קיבל תשלום בזמן')}&meaning=yes&limit=20`);
-    assert.equal(list.meaning, true);
+    assert.ok(list.meaning === true || list.meaningUnavailable === true, 'neither by meaning nor the fallback');
     assert.ok(list.items.length > 0);
+    if (list.meaningUnavailable) console.warn('  warning: the AI did not answer (key missing or quota spent): the fallback on the words was used');
   }],
   ['nothing found is a 200 with an empty list', async () => {
     const list = await json('/v1/documents?q=zzzzzzzz');

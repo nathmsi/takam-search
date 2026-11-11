@@ -7,7 +7,7 @@ import { ResultList } from './ResultList';
 function renderResults(props: Partial<React.ComponentProps<typeof ResultList>> = {}) {
   return render(
     <MemoryRouter>
-      <ResultList items={[DOCUMENTS.payments, DOCUMENTS.form]} total={2} relaxed={false} meaning={false} selectedCodeText={undefined} search="?q=x" {...props} />
+      <ResultList items={[DOCUMENTS.payments, DOCUMENTS.form]} total={2} relaxed={false} meaning={false} meaningUnavailable={false} selectedCodeText={undefined} search="?q=x" {...props} />
     </MemoryRouter>,
   );
 }
@@ -43,6 +43,12 @@ describe('ResultList', () => {
     renderResults({ meaning: true });
 
     expect(screen.getByRole('status')).toHaveTextContent('לפי משמעות');
+  });
+
+  it('says when the AI was not available and the list is the one of the search by words', () => {
+    renderResults({ meaningUnavailable: true });
+
+    expect(screen.getByRole('status')).toHaveTextContent('אינו זמין כרגע');
   });
 
   it('says nothing about "closest" for a normal answer', () => {

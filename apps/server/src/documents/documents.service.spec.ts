@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { createTestDatabase } from '../../test/support/create-test-database';
 import type { DatabaseService } from '../database/database.service';
 import { DocumentsRepository } from './documents.repository';
@@ -71,7 +71,32 @@ describe('DocumentsService', () => {
   });
 
   it('gives nothing, and does not say "closest", when no word is anywhere', async () => {
-    expect(await service.list({ q: 'zzzzzzzz' })).toEqual({ items: [], total: 0, relaxed: false, meaning: false });
+    expect(await service.list({ q: 'zzzzzzzz' })).toEqual({ items: [], total: 0, relaxed: false, meaning: false, meaningUnavailable: false });
+  });
+
+  describe('when the AI cannot answer', () => {
+    it('falls back on the search by words, and says so, instead of failing', async () => {
+      ai.embedQuestion.mockRejectedValueOnce(new ServiceUnavailableException('quota'));
+
+      const page = await service.list({ q: 'תשלום מקדמות', meaning: 'yes' });
+
+      expect(page).toMatchObject({ meaning: false, meaningUnavailable: true, relaxed: false });
+      expect(page.items.map((item) => item.codeText)).toContain('H.1.4.5');
+    });
+
+    it('keeps the "closest documents" rule in the fallback', async () => {
+      ai.embedQuestion.mockRejectedValueOnce(new ServiceUnavailableException('quota'));
+
+      const page = await service.list({ q: 'האם אפשר לשלם מקדמה', meaning: 'yes' });
+
+      expect(page).toMatchObject({ meaning: false, meaningUnavailable: true, relaxed: true });
+    });
+
+    it('does not hide a real bug', async () => {
+      ai.embedQuestion.mockRejectedValueOnce(new Error('boom'));
+
+      await expect(service.list({ q: 'מקדמות', meaning: 'yes' })).rejects.toThrow('boom');
+    });
   });
 
   it('passes the filters on', async () => {

@@ -1,3 +1,4 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import type { DocumentDetailDto, DocumentDto, DocumentListDto } from '@takam/contracts';
 import request from 'supertest';
@@ -66,7 +67,7 @@ describe('Documents (e2e)', () => {
     const { status, body } = await get('/v1/documents', { q: 'zzzzzzzz' });
 
     expect(status).toBe(200);
-    expect(body).toEqual({ items: [], total: 0, relaxed: false, meaning: false });
+    expect(body).toEqual({ items: [], total: 0, relaxed: false, meaning: false, meaningUnavailable: false });
   });
 
   it('GET /v1/documents?chapter=&type=&inForce= filters', async () => {
@@ -137,6 +138,30 @@ describe('Documents by meaning (e2e)', () => {
 
   it('GET /v1/documents without meaning says meaning: false', async () => {
     expect(((await get({ q: 'מקדמות' })).body as DocumentListDto).meaning).toBe(false);
+  });
+});
+
+describe('Documents by meaning when the AI is down (e2e)', () => {
+  let app: INestApplication;
+  const get = (query: object) => request(app.getHttpServer()).get('/v1/documents').query(query);
+
+  beforeAll(async () => {
+    app = await createTestApp({
+      embedQuestion: () => Promise.reject(new ServiceUnavailableException('The search by meaning is not available right now')),
+    });
+  }, 60_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('GET /v1/documents?q=&meaning=yes answers 200 with the search by words, and says the AI was not available', async () => {
+    const { status, body } = await get({ q: 'תשלום מקדמות', meaning: 'yes' });
+
+    const list = body as DocumentListDto;
+    expect(status).toBe(200);
+    expect(list).toMatchObject({ meaning: false, meaningUnavailable: true, relaxed: false });
+    expect(list.items.map((item) => item.codeText)).toContain('H.1.4.5');
   });
 });
 

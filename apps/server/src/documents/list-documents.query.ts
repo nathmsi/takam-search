@@ -34,7 +34,7 @@ export class ListDocumentsQuery {
   @ApiPropertyOptional({
     enum: ['yes', 'no'],
     default: 'no',
-    description: 'Experiment: `yes` also finds documents close in meaning to `q` (needs `q`; only the sections that were embedded). 503 when the server has no AI key.',
+    description: 'Experiment: `yes` also finds documents close in meaning to `q` (needs `q`; only the sections that were embedded). Without an AI key, or when the AI fails, the answer is the one of the search by words (`meaningUnavailable: true`).',
   })
   @IsOptional()
   @IsIn(['yes', 'no'])

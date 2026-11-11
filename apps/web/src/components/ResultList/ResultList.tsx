@@ -11,13 +11,15 @@ interface ResultListProps {
   readonly relaxed: boolean;
   /** The list comes from the search by meaning (an experiment). */
   readonly meaning: boolean;
+  /** The search by meaning was asked but the AI could not answer: this is the search by words. */
+  readonly meaningUnavailable: boolean;
   readonly selectedCodeText: string | undefined;
   /** The address query of the filters (`?q=…`), kept on every link so the search survives a click. */
   readonly search: string;
 }
 
 /** The result of a search with words: a flat list, the best match first (the server ranks them). */
-export function ResultList({ items, total, relaxed, meaning, selectedCodeText, search }: ResultListProps) {
+export function ResultList({ items, total, relaxed, meaning, meaningUnavailable, selectedCodeText, search }: ResultListProps) {
   return (
     <div className={styles.results}>
       <div className={styles.head}>
@@ -30,6 +32,11 @@ export function ResultList({ items, total, relaxed, meaning, selectedCodeText, s
         {meaning ? (
           <p className={styles.relaxed} role="status">
             {messages.meaningNotice}
+          </p>
+        ) : null}
+        {meaningUnavailable ? (
+          <p className={styles.relaxed} role="status">
+            {messages.meaningUnavailableNotice}
           </p>
         ) : null}
         {relaxed ? (

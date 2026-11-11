@@ -366,18 +366,17 @@ test.describe('Browse: the selected document', () => {
     });
 
     test.describe('when the server has no AI key', () => {
-      test.use({ expectedConsoleErrors: [/503/] });
-
-      test('starts ticked from a shared address, shows the usual error, and unticking brings the list back', async ({ page }) => {
+      test('starts ticked from a shared address, falls back on the search by words and says so, and unticking removes the notice', async ({ page }) => {
         const browse = new BrowsePage(page);
 
         await page.goto('/documents?q=מקדמות&meaning=yes');
 
         await expect(browse.meaning).toHaveAttribute('aria-pressed', 'true');
-        await expect(page.getByText('לא הצלחנו לטעון את ההוראות')).toBeVisible();
+        await expect(page.getByRole('status').filter({ hasText: 'אינו זמין כרגע' })).toBeVisible();
+        await expect(browse.items.first()).toContainText('מקדמות');
         await browse.meaning.click();
         await expect(browse.meaning).toHaveAttribute('aria-pressed', 'false');
-        await expect(browse.total).toHaveText(/^סה"כ \d+ הוראות$/);
+        await expect(page.getByRole('status').filter({ hasText: 'אינו זמין כרגע' })).toHaveCount(0);
         await expect(page).not.toHaveURL(/meaning/);
       });
     });

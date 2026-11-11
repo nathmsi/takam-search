@@ -94,6 +94,11 @@ export interface DocumentListDto {
   relaxed: boolean;
   /** `true` when the items come from the search by meaning (`meaning=yes`): only the documents that have an embedding. */
   meaning: boolean;
+  /**
+   * `true` when the search by meaning was asked (`meaning=yes`) but the AI could not answer (no key, quota spent, provider down):
+   * the items are then the ones of the search by words, and `meaning` is `false`.
+   */
+  meaningUnavailable: boolean;
 }
 
 /** The answer of `GET /health`. */

@@ -44,7 +44,7 @@ Behind it, more defects: an inverted validity flag, a chapter missing from the f
 - **Nothing found is a normal answer**, with a valid address and a way to clear the filters.
 - **Speed**: one SQL query on indexed, pre-cleaned columns; no list is sent to the browser to be filtered there.
 
-**AI on top, as a switch.** A small ✦ button in the header turns on the **search by meaning** (off by default, `?meaning=yes` in the address). A script (`pnpm data:embed`, run by the daily job for what is new or changed) asks Gemini for an **embedding** of every document (title + description + keywords, 768 numbers) and stores it in a **pgvector** column. When the switch is on, the question is embedded too and the database orders the documents by closeness, mixed with the words (a number or an exact term still wins). *"Can I pay a supplier before I received the goods?"* finds the instructions on advance payments (1.4.2, 1.4.5), which the search by words does not (it answers with cars and hotels). Without a Gemini key the switch answers a clear 503 and the search by words is untouched.
+**AI on top, as a switch.** A small ✦ button in the header turns on the **search by meaning** (off by default, `?meaning=yes` in the address). A script (`pnpm data:embed`, run by the daily job for what is new or changed) asks Gemini for an **embedding** of every document (title + description + keywords, 768 numbers) and stores it in a **pgvector** column. When the switch is on, the question is embedded too and the database orders the documents by closeness, mixed with the words (a number or an exact term still wins). *"Can I pay a supplier before I received the goods?"* finds the instructions on advance payments (1.4.2, 1.4.5), which the search by words does not (it answers with cars and hotels). Without a Gemini key, or when Gemini fails or its daily quota is spent, the search falls back on the search by words and the page says so: no error.
 
 **The next step, if it is needed:** embed the **text of the documents** as well (chunks of the Word files in pgvector) and let the AI write an answer with its sources (RAG). It is a deeper search with its own costs and risks, so it is left out of this POC; today only the metadata of the site's own objects is searched.
 
@@ -105,13 +105,13 @@ More: [docs/README.md](docs/README.md) is the map ([architecture](docs/architect
 
 | Level | What | Count |
 |---|---|---|
-| Server unit | The SQL functions, the loader, the search SQL on the real data in memory, the service, the AI module (fake provider, faked `fetch`), the Takam site client | 141 tests with the end-to-end ones below |
+| Server unit | The SQL functions, the loader, the search SQL on the real data in memory, the service, the AI module (fake provider, faked `fetch`), the Takam site client | 147 tests with the end-to-end ones below |
 | Server end-to-end | The whole application, one file per route, the AI and the Takam site faked | included above |
-| Web unit and component | Pages over a fake API, every component, the API client, the design tokens (contrast AA) | 98 |
+| Web unit and component | Pages over a fake API, every component, the API client, the design tokens (contrast AA) | 99 |
 | Web end-to-end | Playwright on the builds, phone and desktop, axe accessibility in both themes | 108 |
 | Live site | `scripts/smoke-test.mjs`, 12 checks run after every deploy | 12 |
 
-**Coverage, measured (`pnpm test:coverage`), not perfect:** server 99.0 % of statements, 87.1 % of branches, 100 % of functions and lines; web 98.5 % of statements, 93.8 % of branches, 97.8 % of functions, 99.3 % of lines. The pipeline fails if a change brings the coverage under the bars set in `apps/server/jest.config.js` and `apps/web/vite.config.ts`. The end-to-end tests are not counted in these figures. What is not covered is listed by the report (mostly defensive branches).
+**Coverage, measured (`pnpm test:coverage`), not perfect:** server 99.0 % of statements, 87.4 % of branches, 100 % of functions and lines; web 98.5 % of statements, 93.8 % of branches, 97.8 % of functions, 99.3 % of lines. The pipeline fails if a change brings the coverage under the bars set in `apps/server/jest.config.js` and `apps/web/vite.config.ts`. The end-to-end tests are not counted in these figures. What is not covered is listed by the report (mostly defensive branches).
 
 **Edge cases tested:** an empty answer, a one-word and a question search, `H.7.1.5` (hidden by the site), chapter 10 (missing on the site), singular and plural, quotes, an injection attempt in the words, an unknown document, the AI key missing or the AI failing, the Takam site failing, a wrong file id, CORS read-only, a phone and a desktop screen.
 
@@ -180,6 +180,6 @@ The database is built in memory on every cold start of the API (about 8 to 10 se
 - *How it is found and handled today:* the job asks the site with `checkSiteData` first (the answer must be a list, with at least 900 documents that have a number and 100 chapters), then builds the database from the new files to prove they load, then runs the server tests. If anything is wrong it stops and **keeps the old files**, and GitHub shows a failed run. `/health` reports the number of documents and chapters, and the smoke tests fail the pipeline if the live data is not loaded.
 - *What I would change:* tell someone (a message, not just a red run); put the date of the last successful reading in `/health`; keep the previous files as a dated copy.
 
-**Scenario: Gemini fails or its quota is spent.** The search by meaning answers a clear 503 (the provider's message is not shown) and is logged by `AiService`; the search by words is not touched; the provider retries the passing errors (429, 5xx) and the embedding script waits when told to slow down. I would add a metric on the rate of 503s, and a daily cap.
+**Scenario: Gemini fails or its quota is spent.** The search by meaning falls back on the search by words (a normal 200 with `meaningUnavailable: true`, and the page says that the AI is not available); the failure is logged by `AiService` and the provider's message is not shown. **This happened on 2026-11-11**: the free daily quota of embeddings was spent after the 922 documents were embedded, and the fix was this fallback; the provider retries the passing errors (429, 5xx) and the embedding script waits when told to slow down. I would add a metric on the rate of fallbacks, and a daily cap.
 
 **Observed during this work:** right after a deploy the first requests of a cold instance failed once with a platform error, and then everything answered. The smoke job asks the API again for up to 90 seconds for that reason; a warm instance or a persistent database would remove it.
