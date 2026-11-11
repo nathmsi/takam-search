@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: Deploy the API even if the data did not change
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -44,7 +49,7 @@ jobs:
           git commit -m "chore(data): read the Takam site again"
           git push
       - name: Deploy the API (only when the VERCEL_TOKEN secret exists)
-        if: steps.changes.outputs.changed == 'true' && env.VERCEL_TOKEN != ''
+        if: (steps.changes.outputs.changed == 'true' || inputs.force_deploy) && env.VERCEL_TOKEN != ''
         run: |
           npx vercel@59 pull --yes --environment=production --token="$VERCEL_TOKEN"
           npx vercel@59 build --prod --token="$VERCEL_TOKEN"
