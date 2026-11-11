@@ -360,7 +360,7 @@ test.describe('Browse: the selected document', () => {
 
       await expect(browse.meaning).toHaveAttribute('aria-pressed', 'true');
       await expect(page).toHaveURL(/meaning=yes/);
-      await expect(page.getByRole('status')).toContainText('לפי משמעות');
+      await expect(page.getByRole('status').filter({ hasText: 'לפי משמעות' })).toBeVisible();
       await expect(browse.items).toHaveText([/מקדמות/]);
       expect(asked).toHaveLength(1);
     });

@@ -2,6 +2,10 @@
 
 The pages follow the **order of the official site** (takam.mof.gov.il), so that its users know where they are. Only the order and the layout are followed: the site's logos, illustrations and icons are not copied (the drawing on the home page is our own), and the name on the page is this project's.
 
+## The look
+
+The order of things follows the official site; the look is this project's own, modern and light. On the search pages: a **light bar** at the top (`--color-bar-*` tokens: white, a border, a soft shadow; the home page keeps its deep blue), with the name, the "home" and "search" links as **pills** (the page we are on is a soft blue pill and bolder, not a color alone), then the tools (official site, search by meaning, theme). The **filters are a rounded card** with pill-shaped fields (44 px high, visible labels, a ring on focus). In the list, the chosen document is a **solid pill** in the accent color (the text on it is `--color-on-accent`, AA in both themes). In the details, **the file to download is the main button** (solid), the page on the official site a second, outlined one. Lists and details are cards with a soft shadow. Two drawings were compared (A: close to the original, with its vertical side strip; B: modern, with a top navigation) and B was kept on 2026-11-11.
+
 ## Pages
 
 | Address | Page | Order of things (right to left) |

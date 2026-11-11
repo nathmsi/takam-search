@@ -19,10 +19,10 @@
   inline-size: 100%;
   min-block-size: var(--touch-target);
   padding-block: var(--space-2);
-  padding-inline: var(--space-3) 2.5rem;
+  padding-inline: var(--space-4) 2.75rem;
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
   color: var(--color-text);
   font-size: var(--text-base);
   text-overflow: ellipsis;
@@ -56,9 +56,9 @@
   z-index: 20;
   min-inline-size: min(22rem, 90vw);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .list {
@@ -74,8 +74,8 @@
   align-items: center;
   gap: var(--space-2);
   min-block-size: var(--touch-target);
-  padding-inline: var(--space-2);
-  border-radius: var(--radius-sm);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   cursor: pointer;
 }

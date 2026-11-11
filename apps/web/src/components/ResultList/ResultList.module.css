@@ -38,8 +38,7 @@
   display: grid;
   gap: var(--space-1);
   padding: var(--space-3);
-  border-block-end: 1px solid var(--color-border);
-  border-inline-start: 4px solid transparent;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   text-decoration: none;
   transition: background var(--motion-fast) var(--motion-ease);
@@ -51,10 +50,10 @@
   background: var(--color-surface-muted);
 }
 
+/* The chosen document: a solid pill; the words inside change color with it. */
 .item[aria-current='page'] {
-  border-inline-start-color: var(--color-accent);
-  background: var(--color-accent-soft);
-  color: var(--color-on-accent-soft);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
 .top {
@@ -72,7 +71,7 @@
 }
 
 .item[aria-current='page'] .code {
-  color: var(--color-on-accent-soft);
+  color: var(--color-on-accent);
 }
 
 .type {
@@ -83,7 +82,7 @@
 
 .item[aria-current='page'] .type,
 .item[aria-current='page'] .where {
-  color: var(--color-on-accent-soft);
+  color: var(--color-on-accent);
 }
 
 .name {

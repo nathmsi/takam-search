@@ -25,6 +25,12 @@
   --color-on-hero: #ffffff;
   --color-on-hero-muted: #d3e2f1;
 
+  /* The bar of the search pages: light, with a border, like a modern app (the home page keeps the deep blue above). */
+  --color-bar-bg: #ffffff;
+  --color-on-bar: #0f172a;
+  --color-on-bar-muted: #475569;
+  --color-bar-hover: #e8eef4;
+
   /* The home page: a pale sky, a turquoise band behind the topics, and the colors of its own illustration. */
   --color-home-sky: #dce7ef;
   --color-home-band: #1593b5;
@@ -105,6 +111,11 @@
   --color-art-frame: #0a1220;
   --color-art-screen: #1b2740;
   --color-art-paper: #e6ecf5;
+
+  --color-bar-bg: #0f1a2b;
+  --color-on-bar: #e6ecf5;
+  --color-on-bar-muted: #a3b1c6;
+  --color-bar-hover: #1b2740;
 
   --color-header-bg: #0a1626;
   --color-on-header: #f1f5fb;

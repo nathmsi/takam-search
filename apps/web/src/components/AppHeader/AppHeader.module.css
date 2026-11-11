@@ -1,6 +1,8 @@
 .header {
-  background: var(--color-header-bg);
-  color: var(--color-on-header);
+  border-block-end: 1px solid var(--color-border);
+  background: var(--color-bar-bg);
+  color: var(--color-on-bar);
+  box-shadow: var(--shadow-card);
 }
 
 .inner {
@@ -8,7 +10,7 @@
   align-items: center;
   gap: var(--space-3) var(--space-5);
   max-inline-size: var(--content-width);
-  min-block-size: 4rem;
+  min-block-size: 4.25rem;
   margin-inline: auto;
   padding-inline: var(--space-4);
 }
@@ -18,39 +20,34 @@
   align-items: center;
   gap: var(--space-3);
   min-block-size: var(--touch-target);
-  color: var(--color-on-header);
+  color: var(--color-on-bar);
   text-decoration: none;
-}
-
-.brand:focus-visible,
-.link:focus-visible {
-  outline-color: var(--color-focus-on-dark);
 }
 
 .logo {
   display: grid;
   place-items: center;
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
   border-radius: var(--radius-md);
-  background: var(--color-on-header);
-  color: var(--color-header-bg);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
 .name {
   font-size: var(--text-lg);
-  font-weight: 700;
+  font-weight: 800;
   line-height: var(--leading-tight);
   white-space: nowrap;
 }
 
 .poc {
   padding: 0.1rem var(--space-2);
-  border: 1px solid var(--color-on-header-muted);
   border-radius: var(--radius-pill);
-  color: var(--color-on-header-muted);
+  background: var(--color-accent-soft);
+  color: var(--color-on-accent-soft);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
 }
 
@@ -60,7 +57,7 @@
   margin-inline-start: var(--space-4);
 }
 
-/* The tools sit at the far end of the band. */
+/* The tools sit at the far end of the bar. */
 .tools {
   display: flex;
   align-items: center;
@@ -73,22 +70,28 @@
   align-items: center;
   gap: var(--space-2);
   min-block-size: var(--touch-target);
-  padding-inline: var(--space-3);
-  border-radius: var(--radius-md);
-  color: var(--color-on-header);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-pill);
+  color: var(--color-on-bar-muted);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
-  transition: background var(--motion-fast) var(--motion-ease);
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
 }
 
 .link:hover {
-  background: var(--color-header-hover);
+  background: var(--color-bar-hover);
+  color: var(--color-on-bar);
 }
 
-.active {
-  background: var(--color-header-hover);
-  box-shadow: inset 0 -3px 0 var(--color-on-header);
+/* The page we are on: a soft pill and a bolder word, not the color alone. */
+.active,
+.active:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-on-accent-soft);
+  font-weight: 800;
 }
 
 /* On a phone the links keep their icons; their words stay for screen readers. */

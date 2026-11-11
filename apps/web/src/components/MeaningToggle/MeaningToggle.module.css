@@ -6,23 +6,19 @@
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-on-header-muted);
+  color: var(--color-on-bar-muted);
   cursor: pointer;
   transition: background var(--motion-fast) var(--motion-ease);
 }
 
 .button:hover {
-  background: var(--color-header-hover);
-  color: var(--color-on-header);
+  background: var(--color-bar-hover);
+  color: var(--color-on-bar);
 }
 
-.button:focus-visible {
-  outline-color: var(--color-focus-on-dark);
-}
-
-/* On: a solid disc, like the logo of the header. */
+/* On: a solid disc in the accent color. */
 .on,
 .on:hover {
-  background: var(--color-on-header);
-  color: var(--color-header-bg);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }

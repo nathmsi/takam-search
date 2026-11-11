@@ -1,9 +1,13 @@
+/* A rounded card under the bar, as wide as the content below it. */
 .band {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-block-end: 1px solid var(--color-border);
+  gap: var(--space-2);
+  inline-size: min(100% - 2 * var(--space-4), var(--content-width));
+  margin: var(--space-5) auto 0;
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
@@ -13,9 +17,7 @@
   gap: var(--space-3) var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   align-items: end;
-  max-inline-size: var(--content-width);
   inline-size: 100%;
-  margin-inline: auto;
 }
 
 .field {
@@ -41,10 +43,10 @@
 .select {
   min-block-size: var(--touch-target);
   inline-size: 100%;
-  padding-inline: var(--space-3);
+  padding-inline: var(--space-4);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
   cursor: pointer;
   transition: border-color var(--motion-fast) var(--motion-ease);
 }
@@ -53,12 +55,18 @@
   border-color: var(--color-text-muted);
 }
 
+.select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
 .segments {
   display: inline-flex;
   padding: var(--space-1);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
 }
 
 .segment {
@@ -80,7 +88,7 @@
   place-items: center;
   min-block-size: calc(var(--touch-target) - 0.75rem);
   padding-inline: var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   font-weight: 500;
   white-space: nowrap;
@@ -106,7 +114,6 @@
 
 .clear {
   justify-self: start;
-  max-inline-size: var(--content-width);
   min-block-size: var(--touch-target);
   padding-inline: var(--space-2);
   border: 0;

@@ -59,9 +59,9 @@
   gap: var(--space-2);
   inline-size: 100%;
   min-block-size: var(--touch-target);
-  padding-inline: var(--space-2);
+  padding-inline: var(--space-3);
   border: 0;
-  border-block-end: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text);
   text-align: start;
@@ -100,8 +100,7 @@
   align-items: baseline;
   gap: var(--space-3);
   padding: var(--space-3);
-  border-block-end: 1px solid var(--color-border);
-  border-inline-start: 4px solid transparent;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   text-decoration: none;
   transition: background var(--motion-fast) var(--motion-ease);
@@ -113,10 +112,10 @@
   background: var(--color-surface-muted);
 }
 
+/* The chosen document: a solid pill, and a bolder word. */
 .item[aria-current='page'] {
-  border-inline-start-color: var(--color-accent);
-  background: var(--color-accent-soft);
-  color: var(--color-on-accent-soft);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   font-weight: 700;
 }
 
@@ -129,5 +128,5 @@
 }
 
 .item[aria-current='page'] .code {
-  color: var(--color-on-accent-soft);
+  color: var(--color-on-accent);
 }
