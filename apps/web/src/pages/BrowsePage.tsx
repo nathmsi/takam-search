@@ -26,7 +26,7 @@ const TYPING_DELAY_MS = 250;
 /**
  * The search page, laid out like the official site: the filters across the top, then the list on one side and the selected
  * document on the other. With words typed the list is the ranked answer of the server; without, the tree of chapters.
- * The filters live in the address (`?q=&chapter=&type=&inForce=`) and the selected document in its path
+ * The filters live in the address (`?q=&chapter=&type=&inForce=&meaning=`) and the selected document in its path
  * (`/documents/H.1.2.1`), so a view can be shared and the back button works.
  */
 export function BrowsePage() {
@@ -35,6 +35,7 @@ export function BrowsePage() {
   const chapter: string = searchParams.get('chapter') ?? '';
   const type: TypeFilter = parseTypeFilter(searchParams.get('type'));
   const inForce = parseInForceFilter(searchParams.get('inForce'));
+  const meaning: boolean = searchParams.get('meaning') === 'yes';
   const [draft, setDraft] = useState<string>(() => searchParams.get('q') ?? '');
   const q: string = useDebouncedValue(draft, TYPING_DELAY_MS);
 
@@ -52,15 +53,15 @@ export function BrowsePage() {
     );
   }, [q, setSearchParams]);
 
-  const filters: SearchFilters = { q, chapter, type, inForce };
+  const filters: SearchFilters = { q, chapter, type, inForce, meaning };
   // What the links hand on: the words as typed now, not as the address has them (it follows after a pause).
-  const search: string = buildSearchString({ q: draft, chapter, type, inForce });
+  const search: string = buildSearchString({ q: draft, chapter, type, inForce, meaning });
   const list = useDocumentList(filters);
   const chapters = useChapters();
   const selected = useDocument(codeText);
   useDocumentTitle(selected.data ? `${selected.data.code ?? selected.data.codeText} ${selected.data.title}` : messages.browseTitle);
 
-  const changeParam = (name: 'chapter' | 'type' | 'inForce', value: string, defaultValue: string): void => {
+  const changeParam = (name: 'chapter' | 'type' | 'inForce' | 'meaning', value: string, defaultValue: string): void => {
     setSearchParams(
       (previous) => {
         const next = new URLSearchParams(previous);
@@ -85,10 +86,12 @@ export function BrowsePage() {
         chapter={chapter}
         type={type}
         inForce={inForce}
+        meaning={meaning}
         onTextChange={setDraft}
         onChapterChange={(value) => changeParam('chapter', value, '')}
         onTypeChange={(value) => changeParam('type', value, DEFAULT_TYPE)}
         onInForceChange={(value) => changeParam('inForce', value, 'all')}
+        onMeaningChange={(value) => changeParam('meaning', 'yes', value ? '' : 'yes')}
         onClear={clearAll}
       />
 
@@ -103,7 +106,7 @@ export function BrowsePage() {
               ) : q.trim() === '' ? (
                 <TreeList key={`${chapter}|${type}|${inForce}`} items={list.data.items} total={list.data.total} selectedCodeText={codeText} search={search} />
               ) : (
-                <ResultList items={list.data.items} total={list.data.total} relaxed={list.data.relaxed} selectedCodeText={codeText} search={search} />
+                <ResultList items={list.data.items} total={list.data.total} relaxed={list.data.relaxed} meaning={list.data.meaning} selectedCodeText={codeText} search={search} />
               )}
             </div>
           ) : null}

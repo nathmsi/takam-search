@@ -13,7 +13,7 @@ The pages follow the **order of the official site** (takam.mof.gov.il), so that 
 
 ### The band of filters
 
-Free text, main chapter, sub-chapter, type of information, validity, and "clear search", in the order of the official site. The site also offers "tags": its list is empty in the API, so it is left out. **The type defaults to "instruction"** (the site's own tree shows instructions and tender notices); choosing "all" shows the 922 documents.
+Free text, main chapter, sub-chapter, type of information, validity, and "clear search", in the order of the official site. The site also offers "tags": its list is empty in the API, so it is left out. Under the free text, an experiment: the checkbox **"search by meaning"** (`?meaning=yes`), with its hint (only chapter 1 for now). When on, the list says it comes from the search by meaning; if the server has no AI key, the usual error state shows and unticking brings the list back. **The type defaults to "instruction"** (the site's own tree shows instructions and tender notices); choosing "all" shows the 922 documents.
 
 ### The list
 
@@ -45,4 +45,4 @@ One thing at a time: the list, or the document chosen from it (with a "back to t
 
 ## State
 
-The filters live in the **address** (`?q=&chapter=&type=&inForce=`), the selected document in the **path**. Every link of the list carries the filters, so a click never loses the search, a view can be shared, and the back button works. No `type` in the address means the instructions.
+The filters live in the **address** (`?q=&chapter=&type=&inForce=&meaning=`), the selected document in the **path**. Every link of the list carries the filters, so a click never loses the search, a view can be shared, and the back button works. No `type` in the address means the instructions.

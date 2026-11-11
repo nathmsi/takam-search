@@ -127,3 +127,24 @@
     grid-column: 1 / -1;
   }
 }
+
+.meaning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 44px;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.meaning input {
+  inline-size: 20px;
+  block-size: 20px;
+  accent-color: var(--color-accent);
+}
+
+.meaningHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

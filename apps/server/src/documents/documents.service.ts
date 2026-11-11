@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { DocumentDto, DocumentListDto } from '@takam/contracts';
+import { AiService } from '../ai/ai.service';
 import { DocumentsRepository } from './documents.repository';
-import type { SearchPage } from './documents.repository';
+import type { MeaningSearchRequest, SearchPage } from './documents.repository';
 import { israelToday } from './israel-today';
 import { ListDocumentsQuery } from './list-documents.query';
 
 /** The little logic between the route and the SQL: the defaults, and "if nothing has every word, show the closest". */
 @Injectable()
 export class DocumentsService {
-  constructor(private readonly repository: DocumentsRepository) {}
+  constructor(
+    private readonly repository: DocumentsRepository,
+    private readonly ai: AiService,
+  ) {}
 
   async list(query: ListDocumentsQuery): Promise<DocumentListDto> {
     const request = {
@@ -20,10 +24,18 @@ export class DocumentsService {
       limit: query.limit ?? 50,
       offset: query.offset ?? 0,
     } as const;
+    if (query.meaning === 'yes' && request.words !== '') return this.listByMeaning(request);
     const exact: SearchPage = await this.repository.search({ ...request, mode: 'all' });
-    if (exact.total > 0 || request.words.trim() === '') return { ...exact, relaxed: false };
+    if (exact.total > 0 || request.words.trim() === '') return { ...exact, relaxed: false, meaning: false };
     const closest: SearchPage = await this.repository.search({ ...request, mode: 'any' });
-    return { ...closest, relaxed: closest.total > 0 };
+    return { ...closest, relaxed: closest.total > 0, meaning: false };
+  }
+
+  /** The experiment: the question becomes an embedding (AI), the database orders the documents by closeness to it. */
+  private async listByMeaning(request: Omit<MeaningSearchRequest, 'embedding'>): Promise<DocumentListDto> {
+    const embedding: number[] = await this.ai.embedQuestion(request.words);
+    const page: SearchPage = await this.repository.searchByMeaning({ ...request, embedding });
+    return { ...page, relaxed: false, meaning: true };
   }
 
   async get(codeText: string): Promise<DocumentDto> {

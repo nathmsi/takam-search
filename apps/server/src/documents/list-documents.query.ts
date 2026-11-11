@@ -31,6 +31,15 @@ export class ListDocumentsQuery {
   @IsIn(['yes', 'no', 'all'])
   inForce?: InForceFilter;
 
+  @ApiPropertyOptional({
+    enum: ['yes', 'no'],
+    default: 'no',
+    description: 'Experiment: `yes` also finds documents close in meaning to `q` (needs `q`; only the sections that were embedded). 503 when the server has no AI key.',
+  })
+  @IsOptional()
+  @IsIn(['yes', 'no'])
+  meaning?: 'yes' | 'no';
+
   @ApiPropertyOptional({ minimum: 1, maximum: 1000, default: 50 })
   @IsOptional()
   @Type(() => Number)

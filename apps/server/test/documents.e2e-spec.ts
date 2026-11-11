@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import type { DocumentDto, DocumentListDto } from '@takam/contracts';
 import request from 'supertest';
+import { DatabaseService } from '../src/database/database.service';
 import { createTestApp } from './support/create-test-app';
 
 describe('Documents (e2e)', () => {
@@ -58,7 +59,7 @@ describe('Documents (e2e)', () => {
     const { status, body } = await get('/v1/documents', { q: 'zzzzzzzz' });
 
     expect(status).toBe(200);
-    expect(body).toEqual({ items: [], total: 0, relaxed: false });
+    expect(body).toEqual({ items: [], total: 0, relaxed: false, meaning: false });
   });
 
   it('GET /v1/documents?chapter=&type=&inForce= filters', async () => {
@@ -98,4 +99,36 @@ describe('Documents (e2e)', () => {
       expect(body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
     },
   );
+});
+
+describe('Documents by meaning (e2e)', () => {
+  let app: INestApplication;
+  const get = (query: object) => request(app.getHttpServer()).get('/v1/documents').query(query);
+  const axis0 = (): Promise<number[]> => Promise.resolve([1, ...Array(767).fill(0)]);
+
+  beforeAll(async () => {
+    app = await createTestApp(axis0);
+    await app.get(DatabaseService).query("UPDATE documents SET embedding = $1::vector WHERE code_text = 'H.1.4.5'", [`[${(await axis0()).join(',')}]`]);
+  }, 60_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('GET /v1/documents?q=&meaning=yes gives the documents close in meaning, and says so', async () => {
+    const { status, body } = await get({ q: 'מישהו לא שילם בזמן', meaning: 'yes' });
+
+    const list = body as DocumentListDto;
+    expect(status).toBe(200);
+    expect(list).toMatchObject({ meaning: true, total: 1 });
+    expect(list.items[0].codeText).toBe('H.1.4.5');
+  });
+
+  it('refuses a value of meaning that is not yes or no', async () => {
+    expect((await get({ q: 'x', meaning: 'maybe' })).status).toBe(400);
+  });
+
+  it('GET /v1/documents without meaning says meaning: false', async () => {
+    expect(((await get({ q: 'מקדמות' })).body as DocumentListDto).meaning).toBe(false);
+  });
 });

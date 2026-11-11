@@ -2,9 +2,12 @@ import type { DocumentDto } from '@takam/contracts';
 import { createTestDatabase } from '../../test/support/create-test-database';
 import type { DatabaseService } from '../database/database.service';
 import { DocumentsRepository } from './documents.repository';
-import type { SearchPage, SearchRequest } from './documents.repository';
+import type { MeaningSearchRequest, SearchPage, SearchRequest } from './documents.repository';
 
 /** The search SQL, on the real data. */
+/** A vector of 768 numbers that points along one axis: two different axes mean "nothing in common" (similarity 0). */
+const axis = (index: number): number[] => Array.from({ length: 768 }, (_, position) => (position === index ? 1 : 0));
+
 describe('DocumentsRepository', () => {
   let database: DatabaseService;
   let repository: DocumentsRepository;
@@ -140,6 +143,42 @@ describe('DocumentsRepository', () => {
 
       expect(page.total).toBeGreaterThan(0);
       expect(page.items.every((item) => item.chapterCode === '1.4' && item.type === 'Instruction')).toBe(true);
+    });
+  });
+
+  describe('by meaning (pgvector)', () => {
+    const ask = (embedding: number[], changes: Partial<MeaningSearchRequest> = {}): Promise<SearchPage> =>
+      repository.searchByMeaning({ ...nothingAsked, words: 'zzzz', embedding, ...changes });
+
+    beforeAll(async () => {
+      for (const [codeText, vector] of [['H.1.4.5', axis(0)], ['H.1.10.1', axis(1)], ['H.1.6.6', axis(0)]] as const) {
+        await database.query('UPDATE documents SET embedding = $2::vector WHERE code_text = $1', [codeText, `[${vector.join(',')}]`]);
+      }
+    });
+
+    it('gives the documents whose embedding is close to the question, and only those that have one', async () => {
+      const page = await ask(axis(0));
+
+      expect(codesOf(page).sort()).toEqual(['H.1.4.5', 'H.1.6.6']);
+      expect(page.total).toBe(2);
+    });
+
+    it('puts the document with the words AND the meaning before the one with the meaning only', async () => {
+      const page = await ask(axis(0), { words: 'מקדמות' });
+
+      expect(codesOf(page)[0]).toBe('H.1.4.5');
+    });
+
+    it('keeps a document that has a word of the question even when its meaning is far', async () => {
+      const page = await ask(axis(5), { words: 'קופות ביטחון' });
+
+      expect(codesOf(page)).toContain('H.1.10.1');
+    });
+
+    it('applies the same filters as the search by words', async () => {
+      const page = await ask(axis(0), { chapter: '1.6' });
+
+      expect(codesOf(page)).toEqual(['H.1.6.6']);
     });
   });
 

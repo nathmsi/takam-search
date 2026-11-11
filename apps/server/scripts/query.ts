@@ -5,6 +5,7 @@
  *   pnpm db:query "SELECT search_terms('קופות ביטחון'), normalize_he('דו\"ח השוואה')"
  */
 import { PGlite } from '@electric-sql/pglite';
+import { vector } from '@electric-sql/pglite-pgvector';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadData } from '../src/database/load-data';
@@ -12,7 +13,7 @@ import { loadData } from '../src/database/load-data';
 async function main(): Promise<void> {
   const sql: string | undefined = process.argv[2];
   if (sql === undefined) throw new Error('Give a query: pnpm db:query "SELECT * FROM chapters LIMIT 5"');
-  const database = await PGlite.create();
+  const database = await PGlite.create({ extensions: { vector } });
   await database.exec(readFileSync(join(__dirname, '..', 'src', 'database', 'schema.sql'), 'utf8'));
   await loadData(database);
   const { rows } = await database.query(sql);

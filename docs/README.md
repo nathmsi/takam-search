@@ -23,4 +23,4 @@ Where things are in the code:
 | The shared types | `packages/contracts/src/index.ts` |
 | The pipeline | `.github/workflows/ci.yml` |
 
-Commands (from the root): `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm db:reset`, `pnpm data:refresh`, `pnpm db:query "SELECT …"`.
+Commands (from the root): `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm db:reset`, `pnpm data:refresh`, `pnpm data:embed`, `pnpm db:query "SELECT …"`.

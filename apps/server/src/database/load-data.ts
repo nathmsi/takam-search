@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { PGlite, Transaction } from '@electric-sql/pglite';
 
@@ -60,6 +60,7 @@ export async function loadData(db: PGlite): Promise<void> {
     const index: ChapterIndex = await insertChapters(transaction, chapters, documents);
     await insertDocuments(transaction, documents, index);
     await putChildrenInTheChapterOfTheirParent(transaction);
+    await insertEmbeddings(transaction);
   });
 }
 
@@ -140,4 +141,13 @@ function chapterOf(document: SiteDocument, index: ChapterIndex): string | null {
   if (fromSiteId !== undefined) return fromSiteId;
   const fromNumbers = `${document.mainchaptercode}.${document.subchaptercode}`;
   return index.codes.has(fromNumbers) ? fromNumbers : null;
+}
+
+/** `data/embeddings.json` (made by `pnpm data:embed`): `{ vectors: { "H.1.2.1": [768 numbers] } }`, put in `documents.embedding`. No file = no search by meaning. */
+async function insertEmbeddings(transaction: Transaction): Promise<void> {
+  if (!existsSync(join(DATA_DIRECTORY, 'embeddings.json'))) return;
+  const { vectors } = readJson<{ vectors: Record<string, number[]> }>('embeddings.json');
+  for (const [codeText, embedding] of Object.entries(vectors)) {
+    await transaction.query('UPDATE documents SET embedding = $2::vector WHERE code_text = $1', [codeText, `[${embedding.join(',')}]`]);
+  }
 }

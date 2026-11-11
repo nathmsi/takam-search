@@ -247,4 +247,49 @@ test.describe('Browse: the selected document', () => {
 
     await expect(page.getByText('העמוד לא נמצא')).toBeVisible();
   });
+
+  test.describe('search by meaning (experiment)', () => {
+    test('is off by default, and ticking it asks the server for meaning and says the list is by meaning', async ({ page }) => {
+      const browse = new BrowsePage(page);
+      const asked: string[] = [];
+      await page.route('**/v1/documents?*meaning=yes*', (route) => {
+        asked.push(route.request().url());
+        return route.fulfill({
+          json: {
+            total: 1,
+            relaxed: false,
+            meaning: true,
+            items: [{ id: 1, codeText: 'H.1.4.5', code: '1.4.5', title: 'מקדמות', type: 'Instruction', description: null, keywords: [], version: 1, validFrom: null, validTo: null, isInForce: true, chapterCode: '1.4', chapterTitle: 'ביצוע תשלומים', mainChapterCode: '1', mainChapterTitle: 'ביצוע תקציב', officialPageUrl: 'https://takam.mof.gov.il/document/H.1.4.5' }],
+          },
+        });
+      });
+      await browse.goto('/documents?q=מקדמות');
+      await expect(browse.meaning).not.toBeChecked();
+
+      await browse.meaning.click();
+
+      await expect(browse.meaning).toBeChecked();
+      await expect(page).toHaveURL(/meaning=yes/);
+      await expect(page.getByRole('status')).toContainText('לפי משמעות');
+      await expect(browse.items).toHaveText([/מקדמות/]);
+      expect(asked).toHaveLength(1);
+    });
+
+    test.describe('when the server has no AI key', () => {
+      test.use({ expectedConsoleErrors: [/503/] });
+
+      test('starts ticked from a shared address, shows the usual error, and unticking brings the list back', async ({ page }) => {
+        const browse = new BrowsePage(page);
+
+        await page.goto('/documents?q=מקדמות&meaning=yes');
+
+        await expect(browse.meaning).toBeChecked();
+        await expect(page.getByText('לא הצלחנו לטעון את ההוראות')).toBeVisible();
+        await browse.meaning.click();
+        await expect(browse.meaning).not.toBeChecked();
+        await expect(browse.total).toHaveText(/^סה"כ \d+ הוראות$/);
+        await expect(page).not.toHaveURL(/meaning/);
+      });
+    });
+  });
 });

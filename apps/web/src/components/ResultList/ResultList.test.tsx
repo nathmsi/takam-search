@@ -7,7 +7,7 @@ import { ResultList } from './ResultList';
 function renderResults(props: Partial<React.ComponentProps<typeof ResultList>> = {}) {
   return render(
     <MemoryRouter>
-      <ResultList items={[DOCUMENTS.payments, DOCUMENTS.form]} total={2} relaxed={false} selectedCodeText={undefined} search="?q=x" {...props} />
+      <ResultList items={[DOCUMENTS.payments, DOCUMENTS.form]} total={2} relaxed={false} meaning={false} selectedCodeText={undefined} search="?q=x" {...props} />
     </MemoryRouter>,
   );
 }
@@ -37,6 +37,12 @@ describe('ResultList', () => {
     renderResults({ relaxed: true });
 
     expect(screen.getByRole('status')).toHaveTextContent('אין הוראה שמכילה את כל המילים');
+  });
+
+  it('says when the list comes from the search by meaning (an experiment)', () => {
+    renderResults({ meaning: true });
+
+    expect(screen.getByRole('status')).toHaveTextContent('לפי משמעות');
   });
 
   it('says nothing about "closest" for a normal answer', () => {

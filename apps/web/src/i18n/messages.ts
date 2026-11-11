@@ -38,6 +38,8 @@ export const messages = {
   filtersLabel: 'סינון ההוראות',
   clearSearch: 'ניקוי החיפוש',
   clearAll: 'נקה חיפוש',
+  filterMeaning: 'חיפוש לפי משמעות (ניסיוני)',
+  filterMeaningHint: 'מבין גם שאלות במילים אחרות. כרגע רק בפרק 1.',
   documentTypes: {
     Instruction: 'הוראה',
     'Temporary Instruction': 'הוראה זמנית',
@@ -53,6 +55,7 @@ export const messages = {
   expandList: 'הרחבת רשימה',
   collapseList: 'צמצום רשימה',
   noChapter: 'ללא פרק',
+  meaningNotice: 'התוצאות לפי משמעות (ניסיוני, פרק 1 בלבד). הקרובות ביותר לשאלה מופיעות ראשונות:',
   relaxedNotice: 'אין הוראה שמכילה את כל המילים. אלה ההוראות הקרובות ביותר, לפי חלק מהמילים:',
   loading: 'טוענים הוראות…',
   emptyTitle: 'לא נמצאו הוראות',

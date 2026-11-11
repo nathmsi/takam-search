@@ -9,13 +9,15 @@ interface ResultListProps {
   readonly total: number;
   /** No document has every word: these are the closest ones. */
   readonly relaxed: boolean;
+  /** The list comes from the search by meaning (an experiment). */
+  readonly meaning: boolean;
   readonly selectedCodeText: string | undefined;
   /** The address query of the filters (`?q=…`), kept on every link so the search survives a click. */
   readonly search: string;
 }
 
 /** The result of a search with words: a flat list, the best match first (the server ranks them). */
-export function ResultList({ items, total, relaxed, selectedCodeText, search }: ResultListProps) {
+export function ResultList({ items, total, relaxed, meaning, selectedCodeText, search }: ResultListProps) {
   return (
     <div className={styles.results}>
       <div className={styles.head}>
@@ -25,6 +27,11 @@ export function ResultList({ items, total, relaxed, selectedCodeText, search }: 
         <p className={styles.total} aria-live="polite">
           {messages.treeTotal(total)}
         </p>
+        {meaning ? (
+          <p className={styles.relaxed} role="status">
+            {messages.meaningNotice}
+          </p>
+        ) : null}
         {relaxed ? (
           <p className={styles.relaxed} role="status">
             {messages.relaxedNotice}

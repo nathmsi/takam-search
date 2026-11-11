@@ -6,6 +6,7 @@ export class BrowsePage {
   readonly mainChapter: Locator;
   readonly subChapter: Locator;
   readonly typeSelect: Locator;
+  readonly meaning: Locator;
   readonly total: Locator;
   readonly list: Locator;
   readonly items: Locator;
@@ -21,6 +22,7 @@ export class BrowsePage {
     this.mainChapter = page.getByRole('combobox', { name: 'פרק ראשי' });
     this.subChapter = page.getByRole('combobox', { name: 'פרק משני' });
     this.typeSelect = page.getByRole('combobox', { name: 'סוג מידע' });
+    this.meaning = page.getByRole('checkbox', { name: /חיפוש לפי משמעות/ });
     this.total = page.getByText(/^סה"כ \d+ הוראות$/);
     this.list = page.getByRole('region', { name: 'הוראות תכ"ם' });
     this.items = this.list.getByRole('link');

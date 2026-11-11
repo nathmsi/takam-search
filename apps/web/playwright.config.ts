@@ -27,7 +27,7 @@ export default defineConfig({
   ],
   webServer: [
     // Never reuse a server that is already there: it could be the development one, with other data.
-    { command: 'node ../server/dist/main.js', url: `${API_URL}/health`, env: { PORT: '3199', DATABASE_DIR: 'memory://', CORS_ORIGINS: WEB_URL }, reuseExistingServer: false },
+    { command: 'node ../server/dist/main.js', url: `${API_URL}/health`, env: { PORT: '3199', DATABASE_DIR: 'memory://', CORS_ORIGINS: WEB_URL, GEMINI_API_KEY: '' }, reuseExistingServer: false },
     { command: 'pnpm preview', url: WEB_URL, env: { API_PROXY_TARGET: API_URL }, reuseExistingServer: false },
   ],
 });

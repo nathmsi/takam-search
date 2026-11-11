@@ -24,6 +24,12 @@ When the server starts, `src/database/database.service.ts` opens its database, r
 - **Every day at 04:00 UTC** the GitHub workflow `.github/workflows/refresh-data.yml` runs it (and on demand from the Actions tab). When the files changed it runs the server tests, commits `chore(data): read the Takam site again` to `main`, and redeploys the API on Vercel. That last step runs only if the repository has a `VERCEL_TOKEN` secret (the project and team ids are repository variables).
 - The API keeps the data it loaded at start: on Vercel the database is rebuilt in memory at every cold start, so a redeploy is what brings the new data; locally, restart the server after `pnpm db:reset`.
 
+## Embeddings (experiment)
+
+`GEMINI_API_KEY=... pnpm data:embed` (in `apps/server`, `scripts/embed-documents.ts`) reads `Document.json`, keeps the documents of one main chapter (`--chapter 1`, default 1), and asks Gemini (`gemini-embedding-001`, 768 numbers, task "document") for the embedding of **title + description + keywords** only: the fields of the site's own objects, not the Word files. It writes `data/embeddings.json` (`{ model, dimensions, vectors: { "H.1.2.1": [...] } }`), skips what is already there (`--force` redoes it) and never writes the key. When the database is built, the loader copies each vector into `documents.embedding`. No file = no embeddings, and the search by words is unchanged. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
+
+After `pnpm data:embed`: `pnpm db:reset`, restart the server, tick "search by meaning" or add `meaning=yes`.
+
 ## The tables (`schema.sql`)
 
 `chapters` (122 rows)
@@ -46,6 +52,7 @@ When the server starts, `src/database/database.service.ts` opens its database, r
 | `version`, `valid_from`, `valid_to` | the version, and the dates: an empty end date means no end |
 | `chapter_code` | its sub-chapter (`1.2`) |
 | `parent_id` | a form, a message or a temporary instruction belongs to an instruction |
+| `embedding` | **pgvector** `vector(768)`: the meaning of the document as 768 numbers (Gemini), or `NULL` when it was not embedded (experiment: chapter 1 only) |
 | `title_n`, `keywords_n`, `description_n`, `code_n` | the same texts cleaned by `normalize_he()`, kept up to date by the database itself: **these are what the search reads** |
 
 ## What the loader decides
@@ -68,7 +75,7 @@ After the load, 418 of 418 instructions have a sub-chapter, and so do 241 of 243
 | `has_term(text, term)` | Does a cleaned text contain the term at the **start of a word**, with or without a `ו` in front? (`ועד` is in `ועדת`, not in `מועד`) |
 | `natural_key(code)` | `1.10.2` as numbers `{1,10,2}`, so `1.2` sorts before `1.10` |
 
-These are rules, not a dictionary: they are right most of the time and wrong in the same way on both sides. Known limits: a root that starts with `ב`, `ל`, `כ`, `ש` or `ה` can lose it (`ביטחון` becomes `יטחון`), which is harmless because the document is cleaned the same way; two unrelated words can share a stem; a synonym is not a match.
+These are rules, not a dictionary: they are right most of the time and wrong in the same way on both sides. Known limits: a root that starts with `ב`, `ל`, `כ`, `ש` or `ה` can lose it (`ביטחון` becomes `יטחון`), which is harmless because the document is cleaned the same way; two unrelated words can share a stem; a synonym is not a match in the search by words (the experiment of the search by meaning is there for that).
 
 ## Looking at the data
 

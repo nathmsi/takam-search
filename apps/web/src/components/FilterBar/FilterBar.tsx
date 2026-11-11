@@ -19,22 +19,25 @@ interface FilterBarProps {
   readonly chapter: string;
   readonly type: TypeFilter;
   readonly inForce: InForceFilter;
+  readonly meaning: boolean;
   readonly onTextChange: (text: string) => void;
   readonly onChapterChange: (chapter: string) => void;
   readonly onTypeChange: (type: TypeFilter) => void;
   readonly onInForceChange: (inForce: InForceFilter) => void;
+  readonly onMeaningChange: (meaning: boolean) => void;
   readonly onClear: () => void;
 }
 
 /**
  * The band of filters, in the order of the official site: free text, main chapter, sub-chapter, type of information,
- * validity, and "clear". (The site also has "tags": its list is empty in the API, so it is left out.)
+ * validity, and "clear". Under the free text, the experiment "search by meaning". (The site also has "tags": its list is empty in the API, so it is left out.)
  */
-export function FilterBar({ text, chapters, chapter, type, inForce, onTextChange, onChapterChange, onTypeChange, onInForceChange, onClear }: FilterBarProps) {
+export function FilterBar({ text, chapters, chapter, type, inForce, meaning, onTextChange, onChapterChange, onTypeChange, onInForceChange, onMeaningChange, onClear }: FilterBarProps) {
   const mainId: string = useId();
   const subId: string = useId();
   const typeId: string = useId();
   const validityName: string = useId();
+  const meaningHintId: string = useId();
   const mainChapter: string = chapter.split('.')[0];
   const subChapter: string = chapter.includes('.') ? chapter : '';
   const mains: ChapterDto[] = chapters.filter((item) => item.parentCode === null);
@@ -45,6 +48,13 @@ export function FilterBar({ text, chapters, chapter, type, inForce, onTextChange
       <div className={styles.row}>
         <div className={`${styles.field} ${styles.text}`}>
           <SearchBox value={text} onChange={onTextChange} label={messages.filterFreeText} size="compact" />
+          <label className={styles.meaning}>
+            <input type="checkbox" checked={meaning} aria-describedby={meaningHintId} onChange={(event) => onMeaningChange(event.target.checked)} />
+            <span>{messages.filterMeaning}</span>
+          </label>
+          <span id={meaningHintId} className={styles.meaningHint}>
+            {messages.filterMeaningHint}
+          </span>
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor={mainId}>

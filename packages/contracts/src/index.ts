@@ -66,6 +66,8 @@ export interface DocumentListDto {
    * words). `false` for a normal answer.
    */
   relaxed: boolean;
+  /** `true` when the items come from the search by meaning (`meaning=yes`): only the documents that have an embedding. */
+  meaning: boolean;
 }
 
 /** The answer of `GET /health`. */

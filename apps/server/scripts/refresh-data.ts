@@ -5,6 +5,7 @@
  * The running server keeps what it loaded: restart it (and `pnpm db:reset`) or redeploy it to see the new data.
  */
 import { PGlite } from '@electric-sql/pglite';
+import { vector } from '@electric-sql/pglite-pgvector';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkSiteData } from '../src/database/check-site-data';
@@ -20,7 +21,7 @@ async function download(name: string): Promise<string> {
 }
 
 async function countRows(): Promise<{ documents: number; chapters: number }> {
-  const database = await PGlite.create();
+  const database = await PGlite.create({ extensions: { vector } });
   await database.exec(readFileSync(join(__dirname, '..', 'src', 'database', 'schema.sql'), 'utf8'));
   await loadData(database);
   const [{ documents, chapters }] = (await database.query<{ documents: number; chapters: number }>(

@@ -57,7 +57,7 @@ function listFor(documents: readonly DocumentDto[], params: URLSearchParams): Do
   );
   const has = (document: DocumentDto, word: string): boolean => [document.title, document.description ?? '', ...document.keywords, document.codeText].some((text) => text.includes(word));
   const every: DocumentDto[] = filtered.filter((document) => words.every((word) => has(document, word)));
-  if (every.length > 0 || words.length < 2) return { items: every, total: every.length, relaxed: false };
+  if (every.length > 0 || words.length < 2) return { items: every, total: every.length, relaxed: false, meaning: false };
   const some: DocumentDto[] = filtered.filter((document) => words.some((word) => has(document, word)));
-  return { items: some, total: some.length, relaxed: some.length > 0 };
+  return { items: some, total: some.length, relaxed: some.length > 0, meaning: false };
 }

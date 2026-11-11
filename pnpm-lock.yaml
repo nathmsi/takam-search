@@ -20,6 +20,9 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.16
         version: 0.5.16
+      '@electric-sql/pglite-pgvector':
+        specifier: ^0.0.17
+        version: 0.0.17(@electric-sql/pglite@0.5.16)
       '@nestjs/common':
         specifier: ^11.2.8
         version: 11.2.9(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -423,6 +426,11 @@ packages:
   '@csstools/css-tokenizer@4.0.2':
     resolution: {integrity: sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==}
     engines: {node: '>=20.19.0'}
+
+  '@electric-sql/pglite-pgvector@0.0.17':
+    resolution: {integrity: sha512-tOFBigmwl+6qqZ5y2wOUeDngKeO22lLslSQjmaZri5WAh7V3bDUQaxxlT9MJLSPmdwPjR0NRHqk2V5yFtgLUYQ==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.16
 
   '@electric-sql/pglite@0.5.16':
     resolution: {integrity: sha512-Nj8KcIsJL748W408U2N8q4+9IlONdpRIU8MJypIAAINMJ5nqKyqpX7Mgg/5XKkXiAib3AoZGR6hnJFlrlLBrcg==}
@@ -4069,6 +4077,10 @@ snapshots:
       css-tree: 3.2.1
 
   '@csstools/css-tokenizer@4.0.2': {}
+
+  '@electric-sql/pglite-pgvector@0.0.17(@electric-sql/pglite@0.5.16)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.16
 
   '@electric-sql/pglite@0.5.16': {}
 

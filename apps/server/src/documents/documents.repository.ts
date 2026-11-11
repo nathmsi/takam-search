@@ -18,6 +18,9 @@ export interface SearchRequest {
   readonly offset: number;
 }
 
+/** A search by meaning: the same as {@link SearchRequest}, with the embedding of the words instead of a mode. */
+export type MeaningSearchRequest = Omit<SearchRequest, 'mode'> & { readonly embedding: readonly number[] };
+
 /** One page of the answer, and how many documents match in all. */
 export interface SearchPage {
   readonly items: DocumentDto[];
@@ -68,9 +71,7 @@ const DOCUMENT_JOINS = `
  *    at least one ('any').
  * 5. The best score comes first; at an equal score, the order of the numbers (1.2 before 1.10).
  */
-const SEARCH_SQL = `
-  SELECT ${DOCUMENT_COLUMNS}, count(*) OVER ()::int AS "total"
-  ${DOCUMENT_JOINS}
+const WORD_HITS = `
   CROSS JOIN (SELECT search_terms($2::text) AS terms) AS q
   CROSS JOIN LATERAL (
     SELECT count(*) FILTER (WHERE in_title OR in_keywords OR in_description OR in_code) AS found,
@@ -83,14 +84,47 @@ const SEARCH_SQL = `
       FROM unnest(q.terms) AS term
     ) AS per_term
   ) AS hits
-  WHERE ($3::text IS NULL OR d.chapter_code = $3 OR c.parent_code = $3)
+`;
+
+/** The filters, the same for both searches: $3 chapter, $4 type, $5 validity (with $1 = today). */
+const FILTERS = `
+  ($3::text IS NULL OR d.chapter_code = $3 OR c.parent_code = $3)
     AND ($4::text IS NULL OR d.type = $4)
     AND ($5::text = 'all'
          OR ($5::text = 'yes') = (coalesce(d.valid_from <= $1::date, true) AND coalesce(d.valid_to >= $1::date, true)))
+`;
+
+const SEARCH_SQL = `
+  SELECT ${DOCUMENT_COLUMNS}, count(*) OVER ()::int AS "total"
+  ${DOCUMENT_JOINS}
+  ${WORD_HITS}
+  WHERE ${FILTERS}
     AND (cardinality(q.terms) = 0
          OR hits.found >= CASE WHEN $6::text = 'all' THEN cardinality(q.terms) ELSE 1 END)
   ORDER BY hits.score DESC, natural_key(d.chapter_code) NULLS LAST, natural_key(d.code) NULLS LAST, d.id
   LIMIT $7::int OFFSET $8::int
+`;
+
+/** Below this cosine similarity (0 to 1) a document is not "close in meaning" to the question, unless it also has a word of it. */
+const MIN_SIMILARITY = 0.6;
+
+/**
+ * THE SEARCH BY MEANING (experiment: only the documents whose `embedding` is filled, see docs/data.md).
+ * Same filters as above ($1 to $5). $6 limit, $7 offset, $8 the embedding of the question.
+ * `similarity` = 1 - the cosine distance between the question and the document (pgvector `<=>`). A document stays if it is
+ * close enough in meaning or has at least one of the typed words; the order is the similarity plus a small bonus for the
+ * words (the same score as the search above), so a document that says the words AND means the same comes first.
+ */
+const MEANING_SQL = `
+  SELECT ${DOCUMENT_COLUMNS}, count(*) OVER ()::int AS "total"
+  ${DOCUMENT_JOINS}
+  ${WORD_HITS}
+  CROSS JOIN LATERAL (SELECT 1 - (d.embedding <=> $8::vector) AS similarity) AS meaning
+  WHERE ${FILTERS}
+    AND d.embedding IS NOT NULL
+    AND (meaning.similarity >= ${MIN_SIMILARITY} OR hits.found >= 1)
+  ORDER BY meaning.similarity + hits.score * 0.02 DESC, natural_key(d.code) NULLS LAST, d.id
+  LIMIT $6::int OFFSET $7::int
 `;
 
 const FIND_ONE_SQL = `SELECT ${DOCUMENT_COLUMNS} ${DOCUMENT_JOINS} WHERE d.code_text = $2::text`;
@@ -102,6 +136,12 @@ export class DocumentsRepository {
 
   async search({ today, words, mode, chapter, type, inForce, limit, offset }: SearchRequest): Promise<SearchPage> {
     const rows = await this.database.query<DocumentDto & { total: number }>(SEARCH_SQL, [today, words, chapter, type, inForce, mode, limit, offset]);
+    return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _total, ...document }) => document) };
+  }
+
+  /** Documents ordered by how close their embedding is to the question's. Only the documents that have an embedding. */
+  async searchByMeaning({ today, words, chapter, type, inForce, limit, offset, embedding }: MeaningSearchRequest): Promise<SearchPage> {
+    const rows = await this.database.query<DocumentDto & { total: number }>(MEANING_SQL, [today, words, chapter, type, inForce, limit, offset, `[${embedding.join(',')}]`]);
     return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _total, ...document }) => document) };
   }
 

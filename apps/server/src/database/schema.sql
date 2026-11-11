@@ -1,4 +1,4 @@
--- The whole database of the project: two tables and two small functions. Written for PostgreSQL.
+-- The whole database of the project: three tables and a few small functions. Written for PostgreSQL.
 -- It runs when the server starts and is safe to run again (IF NOT EXISTS / OR REPLACE).
 
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -65,6 +65,9 @@ $$;
 -- 2. The tables (the objects of the Takam site, one row each).
 -- ---------------------------------------------------------------------------------------------------------------------
 
+-- pgvector: the `vector` type, to compare texts by meaning (see `documents.embedding`).
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- A chapter ('1') or a sub-chapter ('1.2'). A sub-chapter points to its chapter.
 CREATE TABLE IF NOT EXISTS chapters (
   code        text PRIMARY KEY,
@@ -86,6 +89,10 @@ CREATE TABLE IF NOT EXISTS documents (
   valid_to     date,                                -- NULL while it has no end date
   chapter_code text REFERENCES chapters (code),     -- its sub-chapter; NULL when the site does not say
   parent_id    integer REFERENCES documents (id) DEFERRABLE INITIALLY DEFERRED,   -- a form or a message belongs to an instruction
+
+  -- The meaning of the document, as 768 numbers (pgvector). Made by `pnpm data:embed` from the title, the description and the
+  -- keywords, loaded from data/embeddings.json. NULL for the documents of the sections that were not embedded (the experiment).
+  embedding     vector(768),
 
   -- The same texts, cleaned by normalize_he(): the columns the search reads. The database keeps them up to date.
   title_n       text GENERATED ALWAYS AS (normalize_he(title)) STORED,
