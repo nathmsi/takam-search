@@ -48,5 +48,6 @@ pnpm monorepo: `apps/server` (the NestJS API over a local PostgreSQL database), 
 - `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm test:e2e` must pass before a commit.
 
 ## Git
+- **Production is deployed by GitHub only** (`ci.yml`: checks, then deploy on `main`, then the smoke tests of the live site). Never deploy from a laptop (`vercel deploy`), never connect Vercel to build on its own. A change that adds a check on the live site adds it to `scripts/smoke-test.mjs`.
 - Format: `type(scope): message` with the types feat, fix, refactor, chore, docs, test. Docs change in the same commit as the code they describe.
 - Never commit an `.env` file or a secret (none is needed to run the project).

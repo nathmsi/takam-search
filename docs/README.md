@@ -21,6 +21,7 @@ Where things are in the code:
 | The pages and components (home, search, list, details, theme) | `apps/web/src/pages/`, `apps/web/src/components/` ([ui.md](ui.md)) |
 | The text of the interface, the tokens | `apps/web/src/i18n/messages.ts`, `apps/web/src/styles/tokens.css` |
 | The shared types | `packages/contracts/src/index.ts` |
-| The pipeline | `.github/workflows/ci.yml` |
+| The pipeline (checks, deploy, checks of the live site) | `.github/workflows/ci.yml`, `scripts/smoke-test.mjs` ([testing.md](testing.md)) |
+| The daily reading of the site | `.github/workflows/refresh-data.yml` ([data.md](data.md)) |
 
 Commands (from the root): `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm db:reset`, `pnpm data:refresh`, `pnpm data:embed`, `pnpm db:query "SELECT …"`.

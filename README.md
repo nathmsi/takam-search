@@ -81,7 +81,7 @@ More: [docs/README.md](docs/README.md) is the map ([architecture](docs/architect
 
 Two Vercel projects, one per app. Settings live on Vercel, set with the CLI: the API has `CORS_ORIGINS` (the address of the web app), the web app has `VITE_API_URL` (the address of the API) and a rewrite of every path to `index.html` (`apps/web/vercel.json`).
 The database is built in memory on every cold start of the API (about 8 to 10 seconds for the first request, then fast). PGlite's binary files are read in `read-pglite-files.ts` with plain paths so that Vercel includes them.
-The API is deployed from the repository root, with `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` set, using `vercel build --prod` then `vercel deploy --prebuilt --prod`.
+**Only GitHub deploys**, and only after every check: `.github/workflows/ci.yml` runs the lint, the types, the build and the server and web tests, then the end-to-end tests, then (on `main` only) deploys the API and the web app to Vercel, then runs `scripts/smoke-test.mjs` on the live site. It needs the `VERCEL_TOKEN` secret and the repository variables `VERCEL_ORG_ID`, `VERCEL_API_PROJECT_ID` and `VERCEL_WEB_PROJECT_ID`.
 
 ## Limits you should know
 
@@ -117,7 +117,7 @@ pnpm dev              # API on :3100, web on :5173, nothing else to install
 pnpm test && pnpm test:e2e
 ```
 
-No secret is needed to run it; `.env.example` lists the optional variables (`PORT`, `CORS_ORIGINS`, `DATABASE_DIR`, `VITE_API_URL`). To deploy, run `vercel login`, then link the two projects (`takam-search-api`, `takam-search`), set `CORS_ORIGINS` on the API and `VITE_API_URL` on the web app with `vercel env add`, and deploy as described in "Deployed (Vercel)". The API must be deployed from the repository root, because the build output refers to root-relative paths. CI (`.github/workflows/ci.yml`) runs lint, types, build and all tests on every push.
+No secret is needed to run it; `.env.example` lists the optional variables (`PORT`, `CORS_ORIGINS`, `DATABASE_DIR`, `VITE_API_URL`). To deploy, create the two Vercel projects (`takam-search-api`, `takam-search`), set `CORS_ORIGINS` and `GEMINI_API_KEY` on the API and `VITE_API_URL` on the web app (`vercel env add`), put a Vercel token in the GitHub secret `VERCEL_TOKEN` and the three ids in repository variables, then push to `main`: the pipeline checks, deploys and checks the live site (the API is built inside `apps/server` and deployed from the root, because the build output refers to root-relative paths).
 
 ### 4. A failure scenario and how it is found
 

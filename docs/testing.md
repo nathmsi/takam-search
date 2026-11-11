@@ -23,6 +23,19 @@
 - **Web unit and component**: the pages over a fake API (`tests/support/fake-api.ts`, which works like the server in spirit): the home page (welcome, chapters, search), the filters in the order of the official site, the tree (closed chapters, the selected one open) and the ranked list, the "closest documents" notice, empty, error and retry, the selected document (the order of the facts, description, keywords, 404), the theme button; the API client (non-JSON answers, status 0, abort); the **design tokens** (every text pair AA in both themes; no hex color outside `tokens.css`).
 - **Web end-to-end** (`e2e/tests/home`, `browse`, `theme`, `accessibility`): the real server (its database in memory, on its own port) and the real build, in a phone and a desktop viewport. They check what the project is for: **singular and plural give the same answer**, **a question finds its instruction**, `H.7.1.5` and chapter 10 are found. The experiment "search by meaning" is covered with the server's answer faked for the success case, and the real server **without a key** (`GEMINI_API_KEY` is emptied in `playwright.config.ts`) for the 503 case. They include the **axe accessibility check in both themes** on the home page, the list, a document, the ranked results and the empty state, a theme that opens light whatever the system prefers and is remembered, and a keyboard path. A page that writes to the console fails its test (`e2e/fixtures.ts`).
 
+## The pipeline (`.github/workflows/ci.yml`)
+
+**One road to production, through GitHub.** Nobody deploys from a laptop and Vercel does not build by itself (it is not connected to the repository).
+
+| Job | When | What |
+|---|---|---|
+| 1. `checks` | every push and pull request | lint, type-check (server and web), build, the server tests, the web tests |
+| 2. `e2e` | after 1 | Playwright on the builds, phone and desktop, with the axe checks |
+| 3. `deploy` | **only a push to `main`**, after 1 and 2 passed (and on a manual run of the workflow) | the API (built in `apps/server`, deployed from the root), then the web app, on Vercel, with the `VERCEL_TOKEN` secret and the project ids kept as repository variables |
+| 4. `smoke` | after 3 | `scripts/smoke-test.mjs` on the **live** site: the API is up and loaded, the search by words and by meaning (the AI key works), `H.7.1.5`, a question, an empty answer, the attached messages, the file link (302 to the Takam site), a 404, CORS from the web app, the web app and a deep link |
+
+A failing check stops everything after it: nothing is deployed from a red build. If job 4 fails, the deploy is already live: look at the failing line and fix forward (or redeploy the previous commit from the Actions tab). The daily reading of the site (`refresh-data.yml`) commits new data and then starts this same pipeline: it never deploys by itself.
+
 ## Rules
 
 - Arrange, Act, Assert. Each test is independent and deterministic: the network is faked (component tests) or the real local server (e2e); dates are passed to the SQL, never read from the clock inside it.

@@ -1,20 +1,28 @@
-name: CI
+name: CI/CD
 
+# One road to production, and it goes through GitHub: every push and pull request is checked (server and web); only a push to
+# main that passed ALL the checks is deployed to Vercel, and the live site is checked again right after. Nobody deploys from a
+# laptop, and Vercel does not build on its own (it is not connected to the repository).
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
-# A newer push to the same branch/PR supersedes the running pipeline.
+# A newer push to a branch or a PR supersedes the running checks; a run on main is never cut in the middle of a deploy.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
 
+env:
+  API_URL: https://takam-search-api.vercel.app
+  WEB_URL: https://takam-search.vercel.app
+
 jobs:
   checks:
-    name: Lint · Type-check · Build · Server and web tests
+    name: 1. Lint, types, build, server and web tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -28,17 +36,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
-      - name: Type-check
+      - name: Type-check (server and web)
         run: pnpm typecheck
       - name: Build (server and web)
         run: pnpm build
-      - name: Server unit and end-to-end tests (the real SQL on the real data, in memory, no network)
+      - name: Server unit and end-to-end tests (the real SQL on the real data, in memory; the AI and the Takam site are faked)
         run: pnpm test:server
       - name: Web unit and component tests
         run: pnpm test:web
 
   e2e:
-    name: E2E tests (Playwright, on the builds, with the real server and the real web app)
+    name: 2. End-to-end tests (Playwright, phone and desktop)
     runs-on: ubuntu-24.04
     needs: checks
     timeout-minutes: 15
@@ -53,7 +61,7 @@ jobs:
       - run: pnpm build
       - name: Install Chromium
         run: pnpm --filter @takam/web exec playwright install --with-deps chromium
-      - name: E2E tests (mobile and desktop)
+      - name: E2E tests on the builds, with the real server and the real web app
         run: pnpm --filter @takam/web exec playwright test
       - name: Playwright report
         if: failure()
@@ -64,3 +72,58 @@ jobs:
             apps/web/playwright-report/
             apps/web/test-results/
           retention-days: 7
+
+  deploy:
+    name: 3. Deploy to Vercel (main only, after every check)
+    runs-on: ubuntu-24.04
+    needs: [checks, e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    timeout-minutes: 20
+    environment: production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check the Vercel token is there
+        run: test -n "$VERCEL_TOKEN" || { echo "::error::The VERCEL_TOKEN secret is missing"; exit 1; }
+      - name: Deploy the API
+        env:
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_API_PROJECT_ID }}
+        run: |
+          # Built inside apps/server (where Vercel finds NestJS), deployed from the root: the paths of the build are root-relative.
+          cd apps/server
+          npx vercel@59 pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel@59 build --prod --token="$VERCEL_TOKEN"
+          cd ../..
+          rm -rf .vercel/output && mkdir -p .vercel
+          cp -R apps/server/.vercel/output .vercel/output
+          npx vercel@59 deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          rm -rf .vercel
+      - name: Deploy the web app
+        env:
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_WEB_PROJECT_ID }}
+        run: |
+          cd apps/web
+          npx vercel@59 pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel@59 build --prod --token="$VERCEL_TOKEN"
+          npx vercel@59 deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+  smoke:
+    name: 4. Check the live site (after the deploy)
+    runs-on: ubuntu-24.04
+    needs: deploy
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Smoke tests on the live API and web app
+        run: node scripts/smoke-test.mjs

@@ -1,28 +1,21 @@
 name: Refresh the data
 
-# Every day: read the Takam site again. When it changed, test the new data, commit it and redeploy the API.
+# Every day: read the Takam site again. When it changed, test the new data and commit it, then start the CI/CD (ci.yml), which
+# runs every check again and is the only thing that deploys.
 on:
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
-    inputs:
-      force_deploy:
-        description: Deploy the API even if the data did not change
-        type: boolean
-        default: false
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   refresh:
-    name: Read the site, test, commit, deploy
+    name: Read the site, test, commit, start the CI/CD
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ vars.VERCEL_API_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
@@ -48,14 +41,8 @@ jobs:
           git add apps/server/data
           git commit -m "chore(data): read the Takam site again"
           git push
-      - name: Deploy the API (only when the VERCEL_TOKEN secret exists)
-        if: (steps.changes.outputs.changed == 'true' || inputs.force_deploy) && env.VERCEL_TOKEN != ''
-        run: |
-          # Built inside apps/server (where Vercel finds NestJS), deployed from the root: the paths in the build are root-relative.
-          cd apps/server
-          npx vercel@59 pull --yes --environment=production --token="$VERCEL_TOKEN"
-          npx vercel@59 build --prod --token="$VERCEL_TOKEN"
-          cd ../..
-          mkdir -p .vercel
-          cp -R apps/server/.vercel/output .vercel/output
-          npx vercel@59 deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+      - name: Run the CI/CD, which checks everything again and deploys (a push made with the workflow token starts nothing by itself)
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref main

@@ -21,7 +21,7 @@ When the server starts, `src/database/database.service.ts` opens its database, r
 
 - It **changes nothing** when the answer looks wrong: not a list, fewer than 900 documents with a number, fewer than 100 chapters (`checkSiteData`), or an HTTP error. It also builds the database from the new files, and puts the old files back if that fails.
 - The site refuses requests without a `User-Agent`; the script sends `takam-search-data-refresh`. `TAKAM_API_URL` (default `https://takam.mof.gov.il/api`) changes the address.
-- **Every day at 04:00 UTC** the GitHub workflow `.github/workflows/refresh-data.yml` runs it (and on demand from the Actions tab). When the files changed it runs the server tests, commits `chore(data): read the Takam site again` to `main`, and redeploys the API on Vercel. That last step runs only if the repository has a `VERCEL_TOKEN` secret (the project and team ids are repository variables).
+- **Every day at 04:00 UTC** the GitHub workflow `.github/workflows/refresh-data.yml` runs it (and on demand from the Actions tab). When the files changed it runs the server tests, commits `chore(data): read the Takam site again` to `main`, and starts the CI/CD (`ci.yml`), which checks everything again, deploys the API and the web app, and checks the live site ([testing.md](testing.md)).
 - The API keeps the data it loaded at start: on Vercel the database is rebuilt in memory at every cold start, so a redeploy is what brings the new data; locally, restart the server after `pnpm db:reset`.
 
 ## The file of a document (Word)
