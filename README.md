@@ -93,4 +93,36 @@ The API is deployed from the repository root, with `VERCEL_ORG_ID` and `VERCEL_P
 
 ## Engineering questions (part C of the assignment)
 
-To write: the design decisions and alternatives (the table of [docs/architecture.md](docs/architecture.md) is the raw material), a limit that hurts maintenance, deploying it from another developer's machine, and a failure scenario with how it is found. The audit of the site's API ([docs/site-audit.md](docs/site-audit.md)) gives real failure cases.
+### 1. Design decisions and the alternatives I weighed
+
+| Decision | Alternative | Why this one |
+|---|---|---|
+| Search is **one SQL query** on cleaned columns | A search service (Elasticsearch, Meilisearch) or filtering in the browser | The data is small (922 documents). SQL runs where the data is and can be read in one file (`SEARCH_SQL`). A separate service is a second thing to run for no gain at this size |
+| **The same SQL function cleans the stored text and the typed words** | Cleaning in TypeScript for the query only | Both sides always agree. If the rule changes, the data and the query change together |
+| **PostgreSQL inside the server (PGlite)** | SQLite, or a hosted PostgreSQL | Real PostgreSQL SQL with nothing to install. Moving to a shared server is the same SQL behind another connection |
+| **Only the metadata** of the site's objects | Indexing the text of the .docx files | The metadata is what the site already knows; reading the documents is a larger project with its own risks (parsing, size, freshness) |
+| **Every word must match, else the closest documents, said so** | Always "any word", or an empty result | A question never ends on an empty page, and the person is told when the answer is only close |
+| **"In force" computed from dates** | Trust the API flag `isvalid` | The flag is inverted in the site's API (see [docs/site-audit.md](docs/site-audit.md)) |
+| Plain server (controller, service, repository per folder) | Ports and adapters, an ORM | A reader follows a request in four files |
+
+### 2. A limit that hurts maintenance
+
+**The data is a snapshot of two committed JSON files**, loaded when the database is empty. When the Takam site changes an instruction, nothing here changes until someone re-reads the site, replaces the files and resets the database (`pnpm db:reset`). The Hebrew cleaning is also a set of hand-written rules, not a dictionary, so a wrong stem needs a change in `schema.sql` and a test on word pairs. The fix I would make first is a scheduled job that re-reads the site's API, rebuilds the tables, and reports what changed.
+
+### 3. Deploying it from another developer's machine
+
+```bash
+pnpm install          # also builds packages/contracts
+pnpm dev              # API on :3100, web on :5173, nothing else to install
+pnpm test && pnpm test:e2e
+```
+
+No secret is needed to run it; `.env.example` lists the optional variables (`PORT`, `CORS_ORIGINS`, `DATABASE_DIR`, `VITE_API_URL`). To deploy, run `vercel login`, then link the two projects (`takam-search-api`, `takam-search`), set `CORS_ORIGINS` on the API and `VITE_API_URL` on the web app with `vercel env add`, and deploy as described in "Deployed (Vercel)". The API must be deployed from the repository root, because the build output refers to root-relative paths. CI (`.github/workflows/ci.yml`) runs lint, types, build and all tests on every push.
+
+### 4. A failure scenario and how it is found
+
+**Scenario: the site changes the shape of its data** (a renamed field, or `documentcodetext` empty), and a new load gives documents that cannot be found by number. Searches by number return nothing and the cold start still looks healthy.
+
+How it is found: `/health` reports the number of documents and chapters loaded, so a drop to a few rows or to zero shows at once; the repository tests assert on real numbers (418 instructions, 243 forms, `H.1.2.1` with its chapters); and the loader only keeps rows that have a code, so such a change would show as a drop in that count. A check that makes the load fail loudly is not written yet. A real failure of the original site is the same kind: its page goes to `/document/undefined` when nothing is found, which no monitoring of the server would catch. Here an empty result is a normal 200 with an empty list, and an end-to-end test covers the empty state.
+
+Another failure is the cold start: the database is rebuilt in memory on every cold start of the API, so the first request takes 8 to 10 seconds. It is visible in the response time of `/health`; the fix is a warm instance or a persistent PostgreSQL.
