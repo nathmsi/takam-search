@@ -1,0 +1,30 @@
+{
+  "name": "takam-search",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Search the content of the Takam instructions (Israel's Accountant General): a React web app and a NestJS API in one pnpm monorepo.",
+  "scripts": {
+    "prepare": "pnpm --filter @takam/contracts build",
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "dev:server": "pnpm --filter @takam/server dev",
+    "dev:web": "pnpm --filter @takam/web dev",
+    "build": "pnpm -r build",
+    "lint": "oxlint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:server": "pnpm --filter @takam/server test",
+    "test:web": "pnpm --filter @takam/web test",
+    "test:e2e": "pnpm --filter @takam/web test:e2e",
+    "db:reset": "pnpm --filter @takam/server db:reset",
+    "db:query": "pnpm --filter @takam/server db:query"
+  },
+  "devDependencies": {
+    "oxlint": "^1.89.0",
+    "typescript": "~6.0.0"
+  },
+  "packageManager": "pnpm@11.13.1",
+  "engines": {
+    "node": ">=22"
+  }
+}

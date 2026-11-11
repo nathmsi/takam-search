@@ -1,0 +1,133 @@
+.tree {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+}
+
+.total {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.action {
+  min-block-size: var(--touch-target);
+  padding-inline: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.action:hover {
+  color: var(--color-accent-strong);
+}
+
+.nodes,
+.items {
+  display: grid;
+  gap: 0;
+}
+
+[hidden] {
+  display: none;
+}
+
+.node {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding-inline: var(--space-2);
+  border: 0;
+  border-block-end: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.node:hover {
+  background: var(--color-surface-muted);
+}
+
+.chapter {
+  font-weight: 700;
+}
+
+.sub {
+  padding-inline-start: var(--space-5);
+  font-weight: 600;
+}
+
+.chevron {
+  color: var(--color-text-muted);
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.closed {
+  transform: rotate(90deg);
+}
+
+.items {
+  padding-inline-start: var(--space-5);
+}
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-block-end: 1px solid var(--color-border);
+  border-inline-start: 4px solid transparent;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background var(--motion-fast) var(--motion-ease);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3rem;
+}
+
+.item:hover {
+  background: var(--color-surface-muted);
+}
+
+.item[aria-current='page'] {
+  border-inline-start-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-on-accent-soft);
+  font-weight: 700;
+}
+
+.code {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.item[aria-current='page'] .code {
+  color: var(--color-on-accent-soft);
+}

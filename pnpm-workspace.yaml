@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  # None of these needs to run an install script (a file watcher, telemetry, a native resolver).
+  '@parcel/watcher': false
+  '@scarf/scarf': false
+  esbuild: true
+  unrs-resolver: false

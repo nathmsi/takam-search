@@ -1,0 +1,50 @@
+.list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.card {
+  display: grid;
+  gap: var(--space-3);
+  min-block-size: 8.5rem;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.bar {
+  block-size: 0.9rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--color-surface-muted) 25%, var(--color-border) 50%, var(--color-surface-muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.short {
+  inline-size: 20%;
+}
+
+.long {
+  inline-size: 70%;
+  block-size: 1.25rem;
+}
+
+.medium {
+  inline-size: 45%;
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}

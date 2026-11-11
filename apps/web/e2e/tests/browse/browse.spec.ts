@@ -1,0 +1,250 @@
+import { expect, test } from '../../fixtures.ts';
+import { BrowsePage } from '../../pages/browse-page.ts';
+
+test.describe('Browse: the list', () => {
+  test('lists the 418 instructions as a tree of chapters that opens', async ({ page }) => {
+    const browse = new BrowsePage(page);
+
+    await browse.goto();
+
+    await expect(browse.total).toHaveText('סה"כ 418 הוראות');
+    await expect(browse.typeSelect).toHaveValue('Instruction');
+    await expect(browse.node('1')).toHaveAttribute('aria-expanded', 'false');
+    await browse.expandAll();
+    await expect(browse.items).toHaveCount(418);
+    await expect(browse.items.first()).toContainText('מבנה פרק 1 – ביצוע תקציב');
+  });
+
+  test('closes and opens a node of the tree', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto('/documents?chapter=1');
+
+    await expect(browse.node('1.1')).toHaveAttribute('aria-expanded', 'true');
+    await browse.node('1.1').click();
+    await expect(browse.node('1.1')).toHaveAttribute('aria-expanded', 'false');
+    await expect(browse.items).toHaveCount(31);
+    await page.getByRole('button', { name: 'צמצום רשימה' }).click();
+    await expect(browse.items).toHaveCount(0);
+    await browse.expandAll();
+
+    await expect(browse.items).toHaveCount(34);
+  });
+
+  test('searches as the person types, and keeps the words in the address', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('מועדי תשלום');
+
+    await expect(browse.total).toHaveText('סה"כ 1 הוראות');
+    await expect(browse.items).toHaveText([/מועדי תשלום/]);
+    await expect(page).toHaveURL(/q=/);
+  });
+
+  test('finds the same documents for the singular and the plural (the Takam site finds 2 and 4)', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('קופת ביטחון');
+    await expect(browse.total).toHaveText('סה"כ 4 הוראות');
+    await expect(browse.items.filter({ hasText: 'קופות ביטחון' })).toHaveCount(2);
+    await browse.search('קופות ביטחון');
+
+    await expect(browse.total).toHaveText('סה"כ 4 הוראות');
+    await expect(browse.items.filter({ hasText: 'קופות ביטחון' })).toHaveCount(2);
+  });
+
+  test('finds H.7.1.5, merged into 7.1.1, which the Takam site leaves out of its tree', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('H.7.1.5');
+
+    await expect(browse.total).toHaveText('סה"כ 1 הוראות');
+    await expect(browse.items).toHaveText([/ועדת הפטור/]);
+  });
+
+  test('answers a question with the closest instructions, and says so', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('האם אפשר לשלם מקדמה');
+
+    await expect(page.getByText('אין הוראה שמכילה את כל המילים')).toBeVisible();
+    await expect(browse.items.filter({ hasText: 'תשלום מקדמות' }).first()).toBeVisible();
+  });
+
+  test('finds the instruction on budget overruns from a question', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('מה עושים כשיש חריגה');
+
+    await expect(browse.items.filter({ hasText: 'ביצוע תקציב המדינה' })).toHaveCount(1);
+  });
+
+  test('starts from the words and filters of a shared address', async ({ page }) => {
+    const browse = new BrowsePage(page);
+
+    await browse.goto('/documents?q=התחייבות&chapter=1.3');
+
+    await expect(browse.freeText).toHaveValue('התחייבות');
+    await expect(browse.subChapter).toHaveValue('1.3');
+    await expect(browse.items).toHaveText([/התחייבות בשם המדינה/, /התחייבות מסגרת/]);
+  });
+
+  test('filters by chapter, including chapter 10 that the Takam site does not list', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.mainChapter.selectOption('10');
+
+    await expect(browse.total).toHaveText('סה"כ 21 הוראות');
+    await expect(browse.mainChapter.getByRole('option', { name: /ניהול מלאי ומצאי/ })).toHaveCount(1);
+  });
+
+  test('filters by sub-chapter, and by kind of document', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.subChapter.selectOption('1.4');
+    await expect(browse.total).toHaveText('סה"כ 6 הוראות');
+    await browse.typeSelect.selectOption('all');
+    await expect(browse.total).toHaveText('סה"כ 7 הוראות');
+    await browse.typeSelect.selectOption('Form');
+
+    await expect(browse.total).toHaveText('סה"כ 1 הוראות');
+  });
+
+  test('lists the 9 temporary instructions under the chapter of their parent', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.typeSelect.selectOption('Temporary Instruction');
+
+    await expect(browse.total).toHaveText('סה"כ 9 הוראות');
+  });
+
+  test('filters by validity, from the dates (the flag of the Takam API is the other way round)', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+    await browse.typeSelect.selectOption('all');
+    await expect(browse.total).toHaveText('סה"כ 922 הוראות');
+
+    await browse.validity('לא בתוקף').click();
+
+    await expect(browse.validity('לא בתוקף')).toBeChecked();
+    await expect(browse.total).not.toHaveText('סה"כ 922 הוראות');
+    await expect(browse.total).not.toHaveText('סה"כ 0 הוראות');
+  });
+
+  test('says nothing was found, and "clear" brings the list back', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('zzzzz');
+
+    await expect(page.getByText('לא נמצאו הוראות')).toBeVisible();
+    await page.getByRole('button', { name: 'נקה חיפוש' }).first().click();
+    await expect(browse.total).toHaveText('סה"כ 418 הוראות');
+  });
+
+  test('can be used with the keyboard alone: type, reach a result, open it with Enter', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.freeText.focus();
+    await page.keyboard.type('מועדי תשלום');
+    await expect(browse.total).toHaveText('סה"כ 1 הוראות');
+    await browse.item('מועדי תשלום').focus();
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(/\/documents\/H\.1\.4\.3/);
+    await expect(browse.detailTitle).toContainText('מועדי תשלום');
+  });
+});
+
+test.describe('Browse: the selected document', () => {
+  test('shows the facts in the order of the official site', async ({ page }) => {
+    const browse = new BrowsePage(page);
+
+    await browse.gotoDocument('H.1.2.1');
+
+    await expect(browse.detailTitle).toHaveText(/הוראה מספר 1\.2\.1 – ביצוע תקציב המדינה/);
+    await expect(browse.facts).toHaveText(['פרק ראשי', 'פרק משני', 'סוג מידע', 'בתוקף', 'בתוקף מתאריך', 'סיום תוקף', 'מהדורה מספר']);
+    await expect(browse.detail).toContainText('ללא תאריך סיום');
+    await expect(browse.detail.getByRole('listitem').filter({ hasText: 'חריגה מהתקציב' })).toHaveCount(1);
+  });
+
+  test('shows H.7.1.5 with its chapter and its description, which says where it went', async ({ page }) => {
+    const browse = new BrowsePage(page);
+
+    await browse.gotoDocument('H.7.1.5');
+
+    await expect(browse.detailTitle).toHaveText(/הוראה מספר 7\.1\.5 – ועדת הפטור/);
+    await expect(browse.detail).toContainText('התקשרויות ורכישות');
+    await expect(browse.detail).toContainText('ועדות מכרזים ועבודתן');
+    await expect(browse.detail).toContainText('הוראה זו אוחדה עם הוראה 7.1.1');
+  });
+
+  test('links to the official page, in a new tab', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.gotoDocument('H.1.2.1');
+
+    const official = browse.detail.getByRole('link', { name: /לדף ההוראה באתר תכ"ם/ });
+
+    await expect(official).toHaveAttribute('href', 'https://takam.mof.gov.il/document/H.1.2.1');
+    await expect(official).toHaveAttribute('target', '_blank');
+  });
+
+  test('opens from the list, marks the document, and keeps the search', async ({ page, isMobile }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto('/documents?chapter=1.4');
+
+    await browse.item('מועדי תשלום').click();
+
+    await expect(page).toHaveURL(/\/documents\/H\.1\.4\.3\?chapter=1\.4$/);
+    await expect(browse.detailTitle).toContainText('מועדי תשלום');
+    if (!isMobile) await expect(browse.item('מועדי תשלום')).toHaveAttribute('aria-current', 'page');
+  });
+
+  test('puts the document in the tab title', async ({ page }) => {
+    await page.goto('/documents/H.1.4.3');
+
+    await expect(page).toHaveTitle(/1\.4\.3 מועדי תשלום/);
+  });
+
+  test('on a phone shows one thing at a time and goes back to the list with the same search; on a desktop shows both', async ({ page, isMobile }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto('/documents?chapter=1.4');
+    await browse.item('מועדי תשלום').click();
+    await expect(browse.detailTitle).toContainText('מועדי תשלום');
+
+    if (isMobile) {
+      await expect(browse.list).toBeHidden();
+      await page.getByRole('link', { name: 'חזרה לרשימה' }).click();
+      await expect(browse.list).toBeVisible();
+      await expect(browse.subChapter).toHaveValue('1.4');
+    } else {
+      await expect(browse.list).toBeVisible();
+      await expect(browse.detail).toBeVisible();
+    }
+  });
+
+  test.describe('an address that leads nowhere', () => {
+    // The browser logs the 404 answer of the API as a console error: expected here.
+    test.use({ expectedConsoleErrors: [/status of 404/] });
+
+    test('says the document was not found', async ({ page }) => {
+      await page.goto('/documents/H.99.9.9');
+
+      await expect(page.getByText('המסמך לא נמצא')).toBeVisible();
+    });
+  });
+
+  test('says the page was not found for an unknown address', async ({ page }) => {
+    await page.goto('/no/such/page');
+
+    await expect(page.getByText('העמוד לא נמצא')).toBeVisible();
+  });
+});

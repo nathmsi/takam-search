@@ -1,0 +1,29 @@
+# Logs
+logs
+*.log
+pnpm-debug.log*
+
+node_modules
+dist
+*.local
+*.tsbuildinfo
+
+# Editor directories and files
+.vscode/*
+.idea
+.DS_Store
+
+.env*
+!.env.example
+
+# Playwright
+playwright-report/
+test-results/
+
+# Coverage
+coverage/
+
+.pgdata/
+
+# Vercel
+.vercel/

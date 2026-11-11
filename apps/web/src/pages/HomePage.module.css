@@ -1,0 +1,158 @@
+/* Full width: the pale sky on top and the turquoise band behind the lower half, as on the official home page. */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: linear-gradient(to bottom, var(--color-home-sky) 0 55%, var(--color-home-band) 55% 100%);
+  /* The colors fill the screen even when the content is short (the band under the header is 4rem). */
+  min-block-size: calc(100dvh - 4rem);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+  inline-size: 100%;
+  max-inline-size: var(--content-width);
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+}
+
+/* The welcome panel. On a phone it is a plain block; on a desktop its far edge is slanted, like the official one. */
+.welcome {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-hero-bg);
+  color: var(--color-on-hero);
+}
+
+.welcomeText {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.welcomeTitle {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
+.welcomeParagraph {
+  color: var(--color-on-hero-muted);
+  font-size: var(--text-lg);
+}
+
+.art {
+  display: grid;
+  justify-items: center;
+}
+
+.entry {
+  display: grid;
+  gap: var(--space-5);
+  min-inline-size: 0;
+}
+
+.search {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.searchField {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.submit {
+  min-block-size: var(--touch-target);
+  padding-inline: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-header-bg);
+  color: var(--color-on-header);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.submit:hover {
+  background: var(--color-header-hover);
+}
+
+.topics {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.topicsTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.tiles {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+}
+
+.showAll {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: var(--touch-target);
+  padding-inline: var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--color-header-bg);
+  color: var(--color-on-header);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.showAll:hover {
+  background: var(--color-header-hover);
+}
+
+.showAll:focus-visible {
+  outline-color: var(--color-focus-on-dark);
+}
+
+/* The chevron points toward the page it leads to: left, in a right-to-left page. */
+.showAllIcon {
+  transform: rotate(90deg);
+}
+
+@media (min-width: 62rem) {
+  .inner {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: var(--space-6);
+    min-block-size: 36rem;
+    padding-block: var(--space-6) var(--space-7);
+  }
+
+  /* The panel grows to the edge of the page and its end side is cut on a slant, over the band and the sky. */
+  .welcome {
+    grid-template-rows: auto 1fr;
+    align-self: stretch;
+    padding: var(--space-7) var(--space-6) var(--space-6);
+    border-radius: 0;
+    clip-path: polygon(31% 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  /* The text stays out of the cut corner: the slant eats the first third of the top edge, on the far side of the panel. */
+  .welcomeText {
+    padding-inline-end: 24%;
+  }
+
+  /* The drawing sits against the reading side, away from the slant, at the bottom of the panel. */
+  .art {
+    align-items: end;
+    justify-items: start;
+  }
+}

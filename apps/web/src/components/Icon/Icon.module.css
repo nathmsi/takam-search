@@ -1,0 +1,9 @@
+.icon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex: none;
+}
+
+[dir='rtl'] .mirror {
+  transform: scaleX(-1);
+}

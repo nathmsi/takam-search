@@ -1,0 +1,129 @@
+.band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-block-end: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.row {
+  display: grid;
+  gap: var(--space-3) var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  align-items: end;
+  max-inline-size: var(--content-width);
+  inline-size: 100%;
+  margin-inline: auto;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.text {
+  grid-column: span 2;
+}
+
+.label {
+  padding: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.select {
+  min-block-size: var(--touch-target);
+  inline-size: 100%;
+  padding-inline: var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.select:hover {
+  border-color: var(--color-text-muted);
+}
+
+.segments {
+  display: inline-flex;
+  padding: var(--space-1);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.segment {
+  position: relative;
+  display: grid;
+  flex: 1;
+}
+
+.radio {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmentLabel {
+  display: grid;
+  place-items: center;
+  min-block-size: calc(var(--touch-target) - 0.75rem);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.radio:hover + .segmentLabel {
+  background: var(--color-surface-muted);
+}
+
+.radio:checked + .segmentLabel {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 600;
+}
+
+.radio:focus-visible + .segmentLabel {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.clear {
+  justify-self: start;
+  max-inline-size: var(--content-width);
+  min-block-size: var(--touch-target);
+  padding-inline: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.clear:hover {
+  color: var(--color-accent-strong);
+}
+
+@media (max-width: 40rem) {
+  .text {
+    grid-column: 1 / -1;
+  }
+}

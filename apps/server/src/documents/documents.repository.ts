@@ -1,0 +1,112 @@
+import { Injectable } from '@nestjs/common';
+import type { DocumentDto, InForceFilter } from '@takam/contracts';
+import { DatabaseService } from '../database/database.service';
+
+/** What a search is asked: the words typed, the filters, the page. */
+export interface SearchRequest {
+  /** Today's date (`YYYY-MM-DD`): "in force" is decided against it. */
+  readonly today: string;
+  /** The words typed, as typed. Empty = no words: every document that passes the filters. */
+  readonly words: string;
+  /** `all`: a document must have every word. `any`: it must have at least one (the closest documents). */
+  readonly mode: 'all' | 'any';
+  /** A chapter (`1`) or a sub-chapter (`1.2`). */
+  readonly chapter: string | null;
+  readonly type: string | null;
+  readonly inForce: InForceFilter;
+  readonly limit: number;
+  readonly offset: number;
+}
+
+/** One page of the answer, and how many documents match in all. */
+export interface SearchPage {
+  readonly items: DocumentDto[];
+  readonly total: number;
+}
+
+/**
+ * The columns of a document, named as the API names them. $1 is today's date.
+ * "In force" is not a column: it is worked out from the two dates (a missing date means "no limit").
+ */
+const DOCUMENT_COLUMNS = `
+  d.id,
+  d.code_text AS "codeText",
+  d.code,
+  d.title,
+  d.type,
+  d.description,
+  CASE WHEN btrim(coalesce(d.keywords, '')) = '' THEN ARRAY[]::text[]
+       ELSE regexp_split_to_array(btrim(d.keywords), '\\s*,\\s*') END AS keywords,
+  d.version,
+  d.valid_from::text AS "validFrom",
+  d.valid_to::text AS "validTo",
+  (coalesce(d.valid_from <= $1::date, true) AND coalesce(d.valid_to >= $1::date, true)) AS "isInForce",
+  c.code AS "chapterCode",
+  c.title AS "chapterTitle",
+  m.code AS "mainChapterCode",
+  m.title AS "mainChapterTitle",
+  'https://takam.mof.gov.il/document/' || d.code_text AS "officialPageUrl"
+`;
+
+/** A document with its sub-chapter (c) and the chapter above it (m). */
+const DOCUMENT_JOINS = `
+  FROM documents d
+  LEFT JOIN chapters c ON c.code = d.chapter_code
+  LEFT JOIN chapters m ON m.code = c.parent_code
+`;
+
+/**
+ * THE SEARCH.
+ *
+ * 1. The typed words ($2) are cleaned by `search_terms()`: no vowel points or quotes, no plural or feminine ending, no
+ *    little words (של, מה, האם...). `קופות` and `קופת` become the same term.
+ * 2. For each term we ask four questions of each document: is it in the title, in the keywords, in the description,
+ *    in the number? (`has_term()`, on the cleaned columns of the table.)
+ * 3. `found` = how many terms the document has somewhere. `score` = a weight for each place a term is found
+ *    (title 3, number 3, keywords 2, description 1).
+ * 4. A document stays if it passes the filters ($3 chapter, $4 type, $5 validity) and has all the terms ($6 = 'all') or
+ *    at least one ('any').
+ * 5. The best score comes first; at an equal score, the order of the numbers (1.2 before 1.10).
+ */
+const SEARCH_SQL = `
+  SELECT ${DOCUMENT_COLUMNS}, count(*) OVER ()::int AS "total"
+  ${DOCUMENT_JOINS}
+  CROSS JOIN (SELECT search_terms($2::text) AS terms) AS q
+  CROSS JOIN LATERAL (
+    SELECT count(*) FILTER (WHERE in_title OR in_keywords OR in_description OR in_code) AS found,
+           coalesce(sum(in_title::int * 3 + in_code::int * 3 + in_keywords::int * 2 + in_description::int), 0) AS score
+    FROM (
+      SELECT has_term(d.title_n, term) AS in_title,
+             has_term(d.keywords_n, term) AS in_keywords,
+             has_term(d.description_n, term) AS in_description,
+             has_term(d.code_n, term) AS in_code
+      FROM unnest(q.terms) AS term
+    ) AS per_term
+  ) AS hits
+  WHERE ($3::text IS NULL OR d.chapter_code = $3 OR c.parent_code = $3)
+    AND ($4::text IS NULL OR d.type = $4)
+    AND ($5::text = 'all'
+         OR ($5::text = 'yes') = (coalesce(d.valid_from <= $1::date, true) AND coalesce(d.valid_to >= $1::date, true)))
+    AND (cardinality(q.terms) = 0
+         OR hits.found >= CASE WHEN $6::text = 'all' THEN cardinality(q.terms) ELSE 1 END)
+  ORDER BY hits.score DESC, natural_key(d.chapter_code) NULLS LAST, natural_key(d.code) NULLS LAST, d.id
+  LIMIT $7::int OFFSET $8::int
+`;
+
+const FIND_ONE_SQL = `SELECT ${DOCUMENT_COLUMNS} ${DOCUMENT_JOINS} WHERE d.code_text = $2::text`;
+
+/** Every SQL query on the documents is here. */
+@Injectable()
+export class DocumentsRepository {
+  constructor(private readonly database: DatabaseService) {}
+
+  async search({ today, words, mode, chapter, type, inForce, limit, offset }: SearchRequest): Promise<SearchPage> {
+    const rows = await this.database.query<DocumentDto & { total: number }>(SEARCH_SQL, [today, words, chapter, type, inForce, mode, limit, offset]);
+    return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _total, ...document }) => document) };
+  }
+
+  async findByCodeText(today: string, codeText: string): Promise<DocumentDto | undefined> {
+    const rows = await this.database.query<DocumentDto>(FIND_ONE_SQL, [today, codeText]);
+    return rows[0];
+  }
+}

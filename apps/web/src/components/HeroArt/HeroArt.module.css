@@ -1,0 +1,42 @@
+.art {
+  inline-size: 100%;
+  max-inline-size: 26rem;
+  block-size: auto;
+}
+
+.frame {
+  fill: var(--color-art-frame);
+}
+
+.screen {
+  fill: var(--color-art-screen);
+}
+
+.folderBack {
+  fill: var(--color-art-folder-edge);
+}
+
+.folder {
+  fill: var(--color-art-folder);
+}
+
+.paper {
+  fill: var(--color-art-paper);
+}
+
+.line {
+  fill: var(--color-art-line);
+}
+
+.lens {
+  fill: var(--color-art-paper);
+  fill-opacity: 0.35;
+  stroke: var(--color-art-frame);
+  stroke-width: 9;
+}
+
+.handle {
+  stroke: var(--color-art-frame);
+  stroke-width: 12;
+  stroke-linecap: round;
+}

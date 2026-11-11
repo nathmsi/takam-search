@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="חיפוש בהוראות תכ&quot;ם של החשב הכללי: פרק 1, ביצוע תקציב. POC." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>חיפוש הוראות תכ"ם</title>
+    <!-- The theme is set before the first paint, so a person who chose dark never sees a flash of light. Light is the default. -->
+    <script>
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem('takam-theme') === 'dark' ? 'dark' : 'light';
+      } catch {
+        document.documentElement.dataset.theme = 'light';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
