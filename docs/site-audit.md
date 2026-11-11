@@ -37,7 +37,35 @@ Observed on the site (the figures come from running the site's own logic on its 
 | 10 | **An unknown address answers `200` with the home page** (`/api/NoSuchThing`), and an unknown version id answers `[]` with 200 | `curl`. Our API answers 404 in JSON, and the web client refuses a non-JSON answer even with a 200 |
 | 11 | **The Word files are served as `application/octetstream`**, a type that does not exist | Response headers |
 | 12 | **The API announces writes it should not**: `access-control-allow-methods: GET, POST, OPTIONS, PUT, PATCH, DELETE` with `allow-credentials: true`, and contradictory headers (`x-frame-options: SAMEORIGIN` and `DENY`). Only `GET` and `OPTIONS` were used; no write was tried | Response headers. Our API is read-only and CORS allows `GET`, `HEAD`, `OPTIONS` (tested) |
-| 13 | **The whole list is downloaded at every visit** (`/api/Document`, 75 KB gzipped, 1126 documents) and filtered in the browser | The network tab, the source. Here the search runs in the database, on the server |
+| 13 | **The whole list is downloaded at every visit** (`/api/Document`, 75 KB gzipped, 1126 documents) and filtered in the browser | The network tab, the source. Here the search runs in the database, on the server. Explained with the next three in [the four problems below](#the-four-problems-of-how-the-site-loads-its-data) |
+
+## The four problems of how the site loads its data
+
+Measured on 2026-11-11 with `curl` (headers, sizes, timings) and with the network tab while using the site. These are observations of the API's behaviour, not of its code, which I have not seen. For each: what happens, why it is a problem, what this project does instead.
+
+### Problem 1: one call brings everything, and it ignores what you ask
+
+- **What happens.** `GET /api/Document` answers with all 1126 documents: **875,738 bytes** (75 KB once gzipped). Adding a parameter changes nothing: `?search=עיקול` returns the same 875,738 bytes. The home page already makes this call before anyone has typed a word.
+- **Why it is a problem.** The server cannot search, so the browser must: it downloads everything to show ten rows, then filters with a plain "contains" (the cause of problems 1 and 2 above). A smarter search (plural, a question, meaning) cannot exist while the list is filtered in the browser. The answer also grows with every new instruction.
+- **Here.** The search is SQL on the server and the browser asks for one page: the list answers with **9 fields per document** (a summary), and the full document (description, keywords, version, dates, file, related documents) is sent only for the one that is opened (`GET /v1/documents/:codeText`).
+
+### Problem 2: no cache, so the same data is downloaded again and again
+
+- **What happens.** The answer has **no `Cache-Control` and no `ETag`**, and the CDN in front of it reports `x-sucuri-cache: EXPIRED`. In one visit the same 75 KB list (and `Chapter`, `Tag`, `docType.json`) was downloaded **twice**: once on the home page, once when moving to the list.
+- **Why it is a problem.** These data change rarely (the list is the same from one minute to the next), yet each page, each visit and each person pays the full download. On a phone or a slow office network, it is time spent waiting for something already received.
+- **Here.** The web app has a request cache (TanStack Query): a list or a document already asked is not asked again for 5 minutes, and the chapters are asked once per visit. The data itself is refreshed once a day in our database, by the daily job, not at every visit.
+
+### Problem 3: opening an instruction makes three calls, one after the other, that could be one
+
+- **What happens.** Selecting an instruction calls `/api/DocumentVersion/<id>`, then `/api/DocumentVersion/RelatedDocumentId/<id>`, then `/api/DocumentVersion/DocumentAttached/<id>`. Each starts only after the previous one (about **80 ms apart**, measured: three calls in a row take about a quarter of a second before the details are complete). Each answer is tiny (300 bytes to 1.3 KB): the cost is the three round trips, not the size.
+- **Why it is a problem.** The three answers belong to the same document, whose id the browser already has from the big list. Nothing in the second call depends on the first, so they could be one answer sent with the document. The details panel waits for the slowest link of a chain that did not need to be one, and the server does three lookups where one would do.
+- **Here.** **One call** per opened instruction (`GET /v1/documents/:codeText`): the document and its **related documents** (messages, forms, temporary instructions) come together, from one SQL query on our own table. The only call that goes to the Takam site is the file to download, and only when someone clicks the download link (`GET /v1/documents/:codeText/file`, a redirect to the site's file), never when a document is simply opened.
+
+### Problem 4: calls whose answer is empty
+
+- **What happens.** `/api/Tag` is called at every page load and answers `[]` (2 bytes), because no document has a tag. For many instructions `RelatedDocumentId/<id>` and `DocumentAttached/<id>` also answer `[]`.
+- **Why it is a problem.** Each is a full round trip, with its headers, for nothing to show. A "tags" filter exists on the screen but has no data behind it (defect 7).
+- **Here.** No tag call and no tag filter. The related documents are part of the document's own answer, so an instruction with none costs no extra request.
 
 ## What was *not* verified
 

@@ -20,6 +20,15 @@ A civil servant with a concrete situation, such as *"what do I do if the budget 
 | `מקדמות ללא התחייבות` | 0 results, although the instructions on advances and on payments without commitments exist |
 | anything with no result | the address becomes `/document/undefined` and the page stays empty, with no help |
 
+**Four problems in how the site loads its data** (measured on 2026-11-11 with `curl` and the network tab; each one is explained in [docs/site-audit.md](docs/site-audit.md#the-four-problems-of-how-the-site-loads-its-data)):
+
+| Problem | What happens | What this project does |
+|---|---|---|
+| **1. One call brings everything** | `GET /api/Document` sends all 1126 documents (875 KB, 75 KB gzipped) and ignores any parameter: `?search=...` returns the same bytes. The browser must filter, so the search can only be a plain "contains" | The search is SQL on the server; the list sends 9 fields per document, the full document only when it is opened |
+| **2. No cache** | No `Cache-Control`, no `ETag`; the same 75 KB list was downloaded twice in one visit (home page, then list) | A request cache in the web app (TanStack Query: 5 minutes, chapters once per visit); the data is refreshed once a day in our database |
+| **3. Three chained calls to open one instruction** | `DocumentVersion/<id>`, then `RelatedDocumentId/<id>`, then `DocumentAttached/<id>`, one after the other (about 80 ms apart), although the id is already known and nothing in one depends on the previous | One call (`GET /v1/documents/:codeText`) returns the document and its related documents; the Takam site is called only for the file, when someone clicks download |
+| **4. Calls whose answer is empty** | `/api/Tag` answers `[]` at every load; `RelatedDocumentId` and `DocumentAttached` often answer `[]` | No tag call; related documents come inside the document's own answer |
+
 Behind it, more defects: an inverted validity flag, a chapter missing from the filter, a tag filter with no data ([docs/site-audit.md](docs/site-audit.md)). The people affected are the staff of the ministries who must apply these rules; that they lose time or apply a wrong rule is a reasonable hypothesis, not a measurement.
 
 ## The solution
