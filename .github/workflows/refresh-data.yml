@@ -1,7 +1,8 @@
 name: Refresh the data
 
 # Every day: read the Takam site again. When it changed, test the new data and commit it, then start the CI/CD (ci.yml), which
-# runs every check again and is the only thing that deploys.
+# runs every check again and is the only thing that deploys. The embeddings of the new or changed documents are made in the
+# same run (a script that calls Gemini for what changed only).
 on:
   schedule:
     - cron: '0 4 * * *'
@@ -15,7 +16,9 @@ jobs:
   refresh:
     name: Read the site, test, commit, start the CI/CD
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
@@ -26,6 +29,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Read the site (fails, and keeps the old files, when its answer looks wrong)
         run: pnpm --filter @takam/server data:refresh
+      - name: Make the embeddings of the new or changed documents (the AI search; only when the GEMINI_API_KEY secret exists)
+        if: env.GEMINI_API_KEY != ''
+        run: pnpm --filter @takam/server data:embed --all
       - name: Did the data change?
         id: changes
         run: |

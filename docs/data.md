@@ -32,6 +32,8 @@ The Word files are **not stored** (the project searches the metadata only). The 
 
 `pnpm data:embed` with `GEMINI_API_KEY` in `apps/server/.env` (in `apps/server`, `scripts/embed-documents.ts`) reads `Document.json`, keeps the documents of one main chapter (`--chapter 1`, default 1) or all of them (`--all`: the 922, about 18 requests, a few minutes because Gemini limits the requests per minute and the script waits 30 seconds when told to), and asks Gemini (`gemini-embedding-001`, 768 numbers, task "document") for the embedding of **title + description + keywords** only: the fields of the site's own objects, not the Word files. It writes `data/embeddings.json` (`{ model, dimensions, vectors: { "H.1.2.1": [...] } }`), skips what is already there (`--force` redoes it) and never writes the key. When the database is built, the loader copies each vector into `documents.embedding`. No file = no embeddings, and the search by words is unchanged. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
 
+**The daily job runs it too** (`refresh-data.yml`, only when the repository has a `GEMINI_API_KEY` secret): after reading the site again it embeds what is new or whose text changed, and drops the vector of a document that left the site, so the AI search never lags behind the data. Each vector is kept with a hash of its text for that.
+
 After `pnpm data:embed`: `pnpm db:reset`, restart the server, turn on the sparkle button of the header or add `meaning=yes`. `data/embeddings.json` is about 9 MB (the 922 vectors); the loader copies them with one SQL query, so the start-up stays fast.
 
 ## The tables (`schema.sql`)

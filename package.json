@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
     "test:server": "pnpm --filter @takam/server test",
     "test:web": "pnpm --filter @takam/web test",
     "test:e2e": "pnpm --filter @takam/web test:e2e",

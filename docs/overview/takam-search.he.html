@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<title>Takam Search: הבעיה, הפתרון והארכיטקטורה</title>
+<title>מטלת בית: Takam Search</title>
 <style>
   @font-face {
     font-family: 'Heebo';
@@ -23,7 +23,6 @@
     --soft: #f1f5f9;
     --accent: #1d4ed8;
     --accent-soft: #e8efff;
-    --warn: #b45309;
     --ai: #6d28d9;
     --ai-soft: #f5f3ff;
   }
@@ -31,43 +30,43 @@
   body {
     margin: 0;
     font-family: 'Heebo', Arial, sans-serif;
-    font-size: 11.5pt;
-    line-height: 1.65;
+    font-size: 11pt;
+    line-height: 1.6;
     color: var(--ink);
   }
   h1, h2, h3 { line-height: 1.25; margin: 0; }
-  .cover { padding-bottom: 14pt; border-bottom: 3px solid var(--accent); margin-bottom: 18pt; }
-  .cover h1 { font-size: 30pt; font-weight: 800; letter-spacing: -0.5pt; }
-  .cover .sub { font-size: 14pt; color: var(--muted); margin-top: 4pt; }
+  .cover { padding-bottom: 12pt; border-bottom: 3px solid var(--accent); margin-bottom: 14pt; }
+  .cover h1 { font-size: 28pt; font-weight: 800; letter-spacing: -0.5pt; }
+  .cover .sub { font-size: 13pt; color: var(--muted); margin-top: 4pt; }
   .meta { display: flex; flex-wrap: wrap; gap: 4pt 18pt; margin-top: 10pt; font-size: 10pt; color: var(--muted); }
   .meta a { color: var(--accent); text-decoration: none; }
-  h2 { font-size: 17pt; font-weight: 800; margin: 20pt 0 8pt; color: var(--accent); }
+  h2 { font-size: 16pt; font-weight: 800; margin: 18pt 0 7pt; color: var(--accent); }
   h2 .n { display: inline-block; min-width: 24pt; height: 24pt; line-height: 24pt; text-align: center; margin-inline-start: 8pt; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12pt; }
-  p { margin: 0 0 8pt; }
-  ul { margin: 0 0 8pt; padding-inline-start: 20pt; }
-  li { margin-bottom: 4pt; }
+  h3 { font-size: 12pt; margin: 9pt 0 3pt; }
+  p { margin: 0 0 7pt; }
+  ul { margin: 0 0 7pt; padding-inline-start: 20pt; }
+  li { margin-bottom: 3pt; }
   code, .ltr { direction: ltr; unicode-bidi: isolate; font-family: 'SF Mono', Menlo, monospace; font-size: 0.88em; background: var(--soft); padding: 0 3pt; border-radius: 3pt; }
-  .callout { border-inline-start: 4px solid var(--accent); background: var(--accent-soft); padding: 9pt 12pt; border-radius: 4pt; margin: 8pt 0 10pt; }
-  .callout.ai { border-inline-start-color: var(--ai); background: var(--ai-soft); }
-  .callout b { font-weight: 700; }
-  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 10.5pt; }
-  th, td { text-align: start; padding: 5pt 8pt; border: 1px solid var(--line); vertical-align: top; }
+  .callout { border-inline-start: 4px solid var(--accent); background: var(--accent-soft); padding: 8pt 12pt; border-radius: 4pt; margin: 8pt 0 10pt; }
+  .ai-box { border: 2px solid var(--ai); background: var(--ai-soft); border-radius: 8pt; padding: 10pt 14pt 4pt; margin: 8pt 0 12pt; }
+  .ai-box h3 { color: var(--ai); font-size: 13pt; margin: 0 0 6pt; }
+  .qa h3 { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 10pt; }
+  th, td { text-align: start; padding: 4pt 8pt; border: 1px solid var(--line); vertical-align: top; }
   th { background: var(--soft); font-weight: 700; }
-  .small { font-size: 9.5pt; color: var(--muted); }
-  figure { margin: 8pt 0 6pt; break-inside: avoid; }
+  figure { margin: 6pt 0 8pt; break-inside: avoid; }
   figure img { width: 100%; display: block; border: 1px solid var(--line); border-radius: 6pt; }
   figcaption { font-size: 9.5pt; color: var(--muted); margin-top: 4pt; text-align: center; }
   .pkgs td:first-child { white-space: nowrap; font-weight: 700; }
-  section { break-inside: auto; }
   h2, .callout, table, figure { break-after: avoid-page; }
-  tr, .callout { break-inside: avoid; }
+  tr, .callout, .ai-box { break-inside: avoid; }
 </style>
 </head>
 <body>
 
 <header class="cover">
-  <h1>Takam Search</h1>
-  <div class="sub">חיפוש טוב יותר בהוראות תכ"ם: הבעיה, הפתרון והארכיטקטורה</div>
+  <h1>מטלת בית: Takam Search</h1>
+  <div class="sub">חיפוש טוב יותר בהוראות תכ"ם: בעיה, פתרון, ארכיטקטורה, AI ובדיקות</div>
   <div class="meta">
     <span>נתן מסיקה · 11.11.2026</span>
     <span>האתר: <a class="ltr" href="https://takam-search.vercel.app">takam-search.vercel.app</a></span>
@@ -76,84 +75,126 @@
 </header>
 
 <section>
-  <h2><span class="n">1</span>הבעיות שמצאתי באתר תכ"ם</h2>
-  <p>אתר הוראות תכ"ם (<span class="ltr">takam.mof.gov.il</span>) הוא המקום שבו עובדי משרדי הממשלה מחפשים את ההנחיות המחייבות של החשב הכללי. השתמשתי באתר, קראתי את הקוד שלו וקראתי ל-API הציבורי שלו (1,126 מסמכים, 114 פרקים). אלה הממצאים:</p>
-  <ul>
-    <li><b>החיפוש לא מוצא:</b> יחיד ורבים הן שתי מילים שונות, שאלה לא מחזירה כלום (הבעיה המרכזית, בפרק הבא).</li>
-    <li><b>דף שנשבר כשאין תוצאות:</b> הכתובת הופכת ל-<code>/document/undefined</code> וחלונית הפרטים נשארת ריקה, בלי שום עזרה.</li>
-    <li><b>דגל התוקף הפוך:</b> <code>isvalid</code> הוא <code>true</code> דווקא ב-51 מסמכים שתוקפם פג, והאתר מסתיר זאת בקוד (<code>isvalid == 1 ? "לא" : "כן"</code>).</li>
-    <li><b>פרק שלם חסר בסינון:</b> פרק 10, "ניהול מלאי ומצאי" (21 הוראות), לא מופיע ב-<code>/api/Chapter</code>, והרשימה קופצת מ-9 ל-11.</li>
-    <li><b>11 הוראות לא מוצגות בעץ,</b> וחיפוש לפי המספר שלהן לא מוצא אותן. ל-7 מהן התיאור אומר שאוחדו או שמספרן שונה, כנראה במכוון.</li>
-    <li><b>סינון התגיות מת:</b> <code>/api/Tag</code> ריק ואין מסמך עם תגית.</li>
-    <li><b>כל הרשימה יורדת בכל ביקור</b> (75KB דחוסים, 1,126 מסמכים) ומסוננת בדפדפן.</li>
-    <li><b>התנהגויות API תמוהות:</b> מזהה קובץ שגוי מחזיר 503 עם HTML, כתובת לא קיימת מחזירה 200 עם דף הבית, קובצי Word מוגשים כ-<code>application/octetstream</code>, וכותרות ה-CORS מכריזות על פעולות כתיבה שלא אמורות להתאפשר.</li>
-  </ul>
-  <p class="small">לא מדדתי את ההשפעה על משתמשים אמיתיים. ההנחה שהם מבזבזים זמן או מיישמים הוראה לא נכונה היא השערה סבירה, לא מדידה.</p>
+  <h2><span class="n">1</span>תקציר</h2>
+  <p><b>הבעיה:</b> אדם שיש לו מצב קונקרטי לא מצליח להגיע בוודאות להוראת תכ"ם שחלה עליו, כי החיפוש באתר הוא "מכיל" פשוט על כותרת, תיאור, מילות מפתח ומספר. <b>הפתרון:</b> מסד נתונים מקביל בבעלותנו, ו-API חיפוש אמיתי מעליו שנכתב ב-SQL. <b>בסוף הוספתי AI:</b> כפתור בכותרת העליונה שמדליק חיפוש לפי משמעות (embeddings ב-<span class="ltr">pgvector</span>). הכול ב-<span class="ltr">TypeScript</span>, ב-<span class="ltr">monorepo</span> אחד, עם בדיקות בכל שכבה וצנרת אחת שפורסת רק אחרי שהכול עבר.</p>
 </section>
 
 <section>
-  <h2><span class="n">2</span>הבעיה המרכזית שבחרתי לפתור: החיפוש</h2>
-  <p>אדם עם מצב קונקרטי, למשל "מה עושים אם חרגנו מהתקציב?", לא מצליח להגיע בוודאות להוראה שחלה עליו. בקוד האתר (<code>filterByFreeTxt</code>) הטקסט החופשי מושווה לארבעה שדות בלבד (כותרת, תיאור, מילות מפתח, מספר) באמצעות "מכיל" פשוט: מילה חייבת להיכתב בדיוק כמו בכותרת.</p>
+  <h2><span class="n">2</span>הבעיות שמצאתי באתר תכ"ם</h2>
+  <p>אתר הוראות תכ"ם (<span class="ltr">takam.mof.gov.il</span>) הוא המקום שבו עובדי משרדי הממשלה מחפשים את ההנחיות המחייבות של החשב הכללי. השתמשתי באתר, קראתי את הקוד שלו וקראתי ל-API הציבורי שלו (1,126 מסמכים, 114 פרקים):</p>
+  <ul>
+    <li><b>החיפוש לא מוצא:</b> יחיד ורבים הן שתי מילים שונות, ושאלה לא מחזירה כלום (הבעיה המרכזית, בפרק הבא).</li>
+    <li><b>דף שנשבר כשאין תוצאות:</b> הכתובת הופכת ל-<code>/document/undefined</code> וחלונית הפרטים נשארת ריקה.</li>
+    <li><b>דגל התוקף הפוך:</b> <code>isvalid</code> הוא <code>true</code> דווקא ב-51 מסמכים שתוקפם פג, והאתר מסתיר זאת בקוד.</li>
+    <li><b>פרק שלם חסר בסינון:</b> פרק 10, "ניהול מלאי ומצאי" (21 הוראות), לא מופיע ב-<code>/api/Chapter</code>.</li>
+    <li><b>11 הוראות לא מוצגות בעץ,</b> וחיפוש לפי המספר שלהן לא מוצא אותן (ל-7 מהן התיאור אומר שאוחדו, כנראה במכוון).</li>
+    <li><b>סינון התגיות מת:</b> <code>/api/Tag</code> ריק.</li>
+    <li><b>כל הרשימה יורדת בכל ביקור</b> (75KB דחוסים) ומסוננת בדפדפן.</li>
+    <li><b>התנהגויות API תמוהות:</b> מזהה קובץ שגוי מחזיר 503 עם HTML, כתובת לא קיימת מחזירה 200 עם דף הבית, וכותרות CORS שמכריזות על פעולות כתיבה.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">3</span>הבעיה המרכזית שבחרתי לפתור: החיפוש</h2>
+  <p><b>האתגר:</b> אדם עם מצב קונקרטי, למשל "מה עושים אם חרגנו מהתקציב?", לא מצליח להגיע בוודאות להוראה שחלה עליו. בקוד האתר (<code>filterByFreeTxt</code>) הטקסט החופשי מושווה לארבעה שדות בלבד באמצעות "מכיל" פשוט: מילה חייבת להיכתב בדיוק כמו בכותרת.</p>
   <table>
     <thead><tr><th>מה מקלידים</th><th>מה האתר עושה</th></tr></thead>
     <tbody>
-      <tr><td>‏<bdi>קופת ביטחון</bdi>, ואחר כך <bdi>קופות ביטחון</bdi></td><td>2 תוצאות ואז 4: היחיד לא מוצא את הרבים</td></tr>
+      <tr><td><bdi>קופת ביטחון</bdi>, ואחר כך <bdi>קופות ביטחון</bdi></td><td>2 תוצאות ואז 4: היחיד לא מוצא את הרבים</td></tr>
       <tr><td><bdi>התחייבות</bdi>, ואחר כך <bdi>התחייבויות</bdi></td><td>11 תוצאות ואז 5</td></tr>
       <tr><td><bdi>מקדמות ללא התחייבות</bdi></td><td>0 תוצאות, למרות שההוראות על מקדמות (1.4.5) ועל תשלומים ללא התחייבות (1.5.1) קיימות</td></tr>
       <tr><td><bdi>מה עושים כשיש חריגה</bdi></td><td>0 תוצאות: שאלה היא לא כותרת</td></tr>
       <tr><td>כל חיפוש בלי תוצאה</td><td>הכתובת הופכת ל-<code>/document/undefined</code> והדף נשאר ריק</td></tr>
     </tbody>
   </table>
-  <div class="callout"><b>למה דווקא החיפוש?</b> כי זו הדרך שבה כמעט כל משתמש מגיע להוראה. שאר הליקויים (דגל התוקף, פרק חסר) פוגעים בדיוק, אבל כשהחיפוש לא מוצא, אין עוד מה לתקן: ההוראה הנכונה פשוט לא מגיעה אל האדם.</div>
+  <p><b>על מי זה משפיע:</b> עובדי משרדי הממשלה שחייבים ליישם את ההוראות. <b>למה כדאי לפתור:</b> זו הדרך שבה כמעט כל משתמש מגיע להוראה, ואם החיפוש לא מוצא, ההוראה הנכונה פשוט לא מגיעה אליו, ואז הוא מבזבז זמן או מיישם הוראה לא נכונה. (לא מדדתי את ההשפעה על משתמשים אמיתיים: זו השערה סבירה, לא מדידה.)</p>
 </section>
 
 <section>
-  <h2><span class="n">3</span>הפתרון בקצרה</h2>
-  <p>אותם מסמכים, אבל החיפוש נעשה בשרת, ב-SQL, על עמודות מנוקות:</p>
+  <h2><span class="n">4</span>הפתרון</h2>
+  <p><b>מסד נתונים מקביל, ו-API חיפוש אמיתי מעליו.</b> האובייקטים של האתר מגיעים מ-<span class="ltr">Salesforce</span> (המזהים והשדות שלהם הם של Salesforce: <code>sfid</code>, <code>rtn_*__c</code>). לדעתי Salesforce הוא מערכת רישום ולא backend של חיפוש: הוא בנוי לקרוא רשומות, לא לחיפוש מדורג, מודע לעברית או סמנטי, והוא מגיע עם מגבלות API. (זו הערכה שלי, לא מדידה של Salesforce.) האתר עצמו מראה את התוצאה: ה-API שלו מוסר לדפדפן את כל הרשימה והדפדפן מסנן. לכן העתקתי את האובייקטים ל<b>מסד <span class="ltr">PostgreSQL</span> בבעלותנו, מותאם לקריאה</b>, ו-API ב-<span class="ltr">NestJS</span> שעונה בשאילתות SQL שנכתבו למשימה הזאת בלבד.</p>
+  <p><b>חיפוש SQL מדויק על השדות שיש לנו.</b> אותם מסמכים, אבל החיפוש בשרת, על עמודות מנוקות:</p>
   <ul>
     <li><b>יחיד ורבים הם אותה מילה;</b> גרשיים בתוך מילה לא משנים (<bdi>דו"ח</bdi> = <bdi>דוח</bdi>); מילות שאלה (<bdi>מה</bdi>, <bdi>האם</bdi>, <bdi>כשיש</bdi>) מתעלמים מהן.</li>
     <li><b>כל המילים חייבות להופיע. אם אין מסמך כזה, מוצגים הקרובים ביותר והתשובה אומרת זאת.</b> שאלה לא נגמרת בדף ריק.</li>
-    <li><b>דירוג:</b> מילה בכותרת או במספר שווה יותר ממילה בתיאור, ובשוויון הסדר הוא סדר המספרים (1.2 לפני 1.10).</li>
-    <li><b>סינון בשרת:</b> פרק, תת-פרק, סוג מידע ותוקף, כשהתוקף מחושב מהתאריכים ולא מהדגל ההפוך.</li>
-    <li><b>"לא נמצא" היא תשובה תקינה,</b> עם כתובת תקינה וכפתור לניקוי הסינון.</li>
-    <li><b>ההוראה הטובה ביותר נפתחת מיד</b> במסך רחב, בלי שצריך ללחוץ.</li>
+    <li><b>דירוג:</b> מילה בכותרת או במספר שווה יותר ממילה בתיאור. במסך רחב ההוראה הטובה ביותר נפתחת מיד.</li>
+    <li><b>סינון בשרת:</b> פרק, תת-פרק, סוג וגם תוקף, שמחושב מהתאריכים ולא מהדגל ההפוך.</li>
+    <li><b>"לא נמצא" היא תשובה תקינה,</b> עם כתובת תקינה וכפתור לניקוי.</li>
+    <li><b>מהירות:</b> שאילתת SQL אחת על עמודות מנוקות מראש. שום רשימה לא נשלחת לדפדפן כדי שיסנן אותה.</li>
   </ul>
-  <p>החיפוש עובד על נתוני העל של האובייקטים של האתר בלבד (כותרת, תיאור, מילות מפתח, מספר, תאריכים, פרקים). תוכן קובצי ה-Word אינו נקרא.</p>
 </section>
 
 <section>
-  <h2><span class="n">4</span>הארכיטקטורה: <bdi>monorepo</bdi> עם <bdi>React, Vite, NestJS</bdi> ובסיס נתונים</h2>
-  <p>הפרויקט הוא <span class="ltr">monorepo</span> אחד (<span class="ltr">pnpm</span>), וכולו ב-<span class="ltr">TypeScript</span>:</p>
+  <h2><span class="n">5</span>ה-AI: חיפוש לפי משמעות, בכפתור</h2>
+  <div class="ai-box">
+    <h3>✦ כפתור בכותרת העליונה: מדליקים וכבים את חיפוש ה-AI</h3>
+    <p>הכפתור כבוי כברירת מחדל, ואז החיפוש הוא החיפוש במילים. כשמדליקים אותו, השאלה הופכת ל-<span class="ltr">embedding</span> (וקטור של 768 מספרים, מ-<span class="ltr">Gemini</span>) והמסד מסדר את המסמכים לפי הקרבה למשמעות, בערבוב עם המילים: מספר הוראה ומונח מדויק עדיין מנצחים.</p>
+    <ul>
+      <li><b>איך נוצרים הווקטורים:</b> סקריפט (<code>pnpm data:embed</code>) שרץ ומחשב embedding לכל מסמך מהכותרת, התיאור ומילות המפתח, ושומר אותו בעמודה מסוג <span class="ltr">pgvector</span> (<code>documents.embedding</code>) לכל 922 המסמכים. <b>המשימה היומית מריצה אותו</b>, וחוסכת: רק מה שחדש או ששונה נשלח ל-<span class="ltr">Gemini</span>.</li>
+      <li><b>דוגמה:</b> <bdi>"אפשר לשלם לספק לפני שקיבלתי את הסחורה"</bdi>. החיפוש במילים מחזיר הוראות על רכב ועל מלונות. החיפוש לפי משמעות מעלה את ההוראות 1.4.2 ו-1.4.5 (תשלום מקדמות), בלי שמילה מהשאלה מופיעה בכותרת.</li>
+      <li><b>בטוח לכבות:</b> בלי מפתח <span class="ltr">Gemini</span> בשרת, הכפתור מחזיר שגיאה ברורה (503) והחיפוש במילים לא מושפע. ה-AI יושב מאחורי מחלקה אחת (<code>AiService</code>) וכל ספק הוא מחלקה נפרדת.</li>
+    </ul>
+  </div>
+  <p><b>השלב הבא, אם יש צורך:</b> ליצור וקטורים גם מ<b>תוכן המסמכים</b> עצמם (קובצי ה-Word, בחלקים) באותה עמודת <span class="ltr">pgvector</span>, ולתת ל-AI לכתוב תשובה עם הפניה למקורות (<span class="ltr">RAG</span>). זה כבר חיפוש מעמיק יותר, עם עלויות וסיכונים משלו (פענוח קבצים, גודל, תשובה שגויה בהקשר משפטי), ולכן השארתי אותו מחוץ ל-POC: כרגע החיפוש מתבסס על נתוני העל בלבד.</p>
+</section>
+
+<section>
+  <h2><span class="n">6</span>הארכיטקטורה: <bdi>monorepo</bdi> עם <bdi>React, Vite, NestJS</bdi> ומסד נתונים</h2>
+  <figure>
+    <img src="architecture.png" alt="תרשים ארכיטקטורה: דפדפן, Vercel (אתר ו-API), בסיס נתונים, משימה יומית, CI/CD ו-Gemini">
+    <figcaption>מהדפדפן ועד מסד הנתונים, כולל המשימה היומית וה-CI/CD (שמות טכניים באנגלית)</figcaption>
+  </figure>
   <table class="pkgs">
     <thead><tr><th>חבילה</th><th>מה יש בה</th></tr></thead>
     <tbody>
-      <tr><td class="ltr">apps/web</td><td><b>הלקוח:</b> <span class="ltr">React 19 + Vite + TypeScript</span>. <span class="ltr">React Query</span> (מטמון אחד של תשובות), <span class="ltr">React Router</span> (הסינון חי בכתובת, כך שאפשר לשתף חיפוש), <span class="ltr">CSS Modules</span>, עברית מימין לשמאל, מצב בהיר וכהה. מבנה הדפים כמו באתר המקורי.</td></tr>
-      <tr><td class="ltr">apps/server</td><td><b>השרת:</b> <span class="ltr">NestJS</span>, תיקייה לכל route, ובכל אחת <span class="ltr">controller → service → repository</span>. קריאה בלבד (<span class="ltr">GET</span>).</td></tr>
-      <tr><td class="ltr">packages/contracts</td><td>הטיפוסים המשותפים ללקוח ולשרת: אם צד אחד משתנה בלי השני, בדיקת הטיפוסים נכשלת.</td></tr>
+      <tr><td class="ltr">apps/web</td><td><b>הלקוח:</b> <span class="ltr">React 19 + Vite + TypeScript</span>, <span class="ltr">React Query</span>, <span class="ltr">React Router</span> (הסינון חי בכתובת, כך שאפשר לשתף חיפוש), <span class="ltr">CSS Modules</span>, עברית מימין לשמאל, מצב בהיר וכהה. מבנה הדפים כמו באתר המקורי.</td></tr>
+      <tr><td class="ltr">apps/server</td><td><b>השרת:</b> <span class="ltr">NestJS</span>, תיקייה לכל route, ובכל אחת <span class="ltr">controller → service → repository</span>, ותיקיית <code>ai/</code> ל-AI. קריאה בלבד (<span class="ltr">GET</span>).</td></tr>
+      <tr><td class="ltr">packages/contracts</td><td>הטיפוסים המשותפים ללקוח ולשרת: צד אחד משתנה בלי השני, בדיקת הטיפוסים נכשלת.</td></tr>
     </tbody>
   </table>
   <ul>
-    <li><b>בסיס הנתונים:</b> <span class="ltr">PostgreSQL</span> אמיתי שרץ בתוך השרת (<span class="ltr">PGlite</span>), בלי שום התקנה. שתי טבלאות (<code>chapters</code>, <code>documents</code>) ופונקציות SQL שמנקות עברית (<code>normalize_he()</code>, <code>search_terms()</code>). הנתונים נטענים משני קובצי JSON, האובייקטים של אתר תכ"ם, כשהבסיס ריק. החיפוש כולו הוא שאילתת SQL אחת שאפשר לקרוא.</li>
-    <li><b>המשימה היומית:</b> פעם ביום <span class="ltr">GitHub Actions</span> קורא שוב את האתר, בודק שהתשובה נראית תקינה, מוודא שהבסיס נבנה ממנה, מריץ את בדיקות השרת, מבצע <span class="ltr">commit</span> ומפעיל את ה-<span class="ltr">CI/CD</span>. כך הנתונים מתעדכנים בלי יד אדם.</li>
-    <li><b>CI/CD, הדרך היחידה לפרודקשן:</b> בדיקות (<span class="ltr">lint</span>, טיפוסים, <span class="ltr">build</span>, בדיקות יחידה בשרת ובלקוח) ← בדיקות קצה-לקצה (<span class="ltr">Playwright</span>, טלפון ושולחן עבודה, נגישות) ← פריסה ל-<span class="ltr">Vercel</span>, רק מ-<span class="ltr">main</span> ורק אחרי שהכול עבר ← 12 בדיקות על האתר החי. אף אחד לא פורס ממחשב אישי.</li>
-    <li><b>בדיקות:</b> 141 בשרת (ה-SQL האמיתי על הנתונים האמיתיים), 89 בלקוח ו-100 בדיקות קצה-לקצה.</li>
+    <li><b>מסד הנתונים:</b> <span class="ltr">PostgreSQL</span> אמיתי שרץ בתוך השרת (<span class="ltr">PGlite</span>, עם התוסף <span class="ltr">pgvector</span>), בלי התקנה. טבלאות <code>chapters</code> ו-<code>documents</code> ופונקציות SQL שמנקות עברית. הנתונים נטענים משני קובצי JSON, האובייקטים של האתר, ואת הווקטורים מקובץ שלישי.</li>
+    <li><b>המשימה היומית:</b> פעם ביום <span class="ltr">GitHub Actions</span> קורא שוב את האתר, בודק שהתשובה נראית תקינה, מוודא שהמסד נבנה ממנה, מחשב embeddings למה שחדש, מריץ את בדיקות השרת, מבצע <span class="ltr">commit</span> ומפעיל את ה-<span class="ltr">CI/CD</span>.</li>
+    <li><b>הכללים הם חלק מהארכיטקטורה:</b> הם כתובים ב-<span class="ltr">CLAUDE.md</span> ונאכפים בבדיקות ובצנרת: שכבות השרת וכיוון התלויות, החיפוש תמיד ב-SQL עם ערכים כפרמטרים, API לקריאה בלבד עם גוף שגיאה אחד, ה-AI רק מאחורי <code>AiService</code> (הבדיקות אף פעם לא קוראות ל-AI אמיתי), כל טקסט הממשק רק ב-<code>messages.ts</code>, כל הצבעים רק ב-<code>tokens.css</code> (ניגודיות AA בשני המצבים, נבדקת), מצב החיפוש בכתובת, והתיעוד מתעדכן באותו commit כמו הקוד.</li>
   </ul>
-  <figure>
-    <img src="architecture.png" alt="תרשים ארכיטקטורה: דפדפן, Vercel (אתר ו-API), בסיס נתונים, משימה יומית, CI/CD ו-Gemini">
-    <figcaption>מהדפדפן ועד בסיס הנתונים, כולל המשימה היומית וה-CI/CD (שמות טכניים באנגלית)</figcaption>
-  </figure>
 </section>
 
 <section>
-  <h2><span class="n">5</span>תוספת: חיפוש לפי משמעות, מתג שאפשר להפעיל ולכבות</h2>
-  <p>בסוף הוספתי יכולת שאפשר <b>להפעיל או לכבות</b>: כפתור קטן (✦) בכותרת העליונה של דפי החיפוש. הוא כבוי כברירת מחדל, ואז החיפוש הוא החיפוש במילים שתואר למעלה. כשמדליקים אותו, השרת מבקש מ-<span class="ltr">Gemini</span> וקטור (<span class="ltr">embedding</span>, 768 מספרים) לשאלה, ומשווה אותו לעמודה מסוג <span class="ltr">pgvector</span> (<code>documents.embedding</code>) שיש בה וקטור לכל אחד מ-922 המסמכים, שנוצר מהכותרת, התיאור ומילות המפתח.</p>
-  <div class="callout ai">
-    <b>דוגמה:</b> השאלה <bdi>"אפשר לשלם לספק לפני שקיבלתי את הסחורה"</bdi>. החיפוש במילים מחזיר הוראות על רכב ועל מלונות. החיפוש לפי משמעות מעלה לראש הרשימה את ההוראות 1.4.2 ו-1.4.5 (תשלום מקדמות), בלי שאף אחת מהמילים האלה מופיעה בכותרת.
-  </div>
+  <h2><span class="n">7</span>בדיקות ואיכות</h2>
+  <table>
+    <thead><tr><th>רמה</th><th>מה נבדק</th><th>כמות</th></tr></thead>
+    <tbody>
+      <tr><td>יחידה ו-API בשרת</td><td>פונקציות ה-SQL, הטעינה, שאילתת החיפוש על הנתונים האמיתיים בזיכרון, השירות, מודול ה-AI (ספק מזויף ו-<span class="ltr">fetch</span> מזויף), הלקוח של אתר תכ"ם, וכל route מקצה לקצה</td><td>141</td></tr>
+      <tr><td>יחידה ורכיבים בלקוח</td><td>דפים מול API מזויף, כל רכיב, לקוח ה-API, טוקני העיצוב (ניגודיות AA)</td><td>89</td></tr>
+      <tr><td>קצה-לקצה (<span class="ltr">Playwright</span>)</td><td>טלפון ושולחן עבודה, שרת אמיתי ו-build אמיתי, נגישות (<span class="ltr">axe</span>) בשני המצבים</td><td>100</td></tr>
+      <tr><td>האתר החי</td><td><span class="ltr">smoke tests</span> אחרי כל פריסה</td><td>12</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>כיסוי, נמדד ולא מושלם:</b> שרת 99.0% הצהרות, 87.1% ענפים, 100% פונקציות ושורות; לקוח 97.9% הצהרות, 93.7% ענפים, 96.7% פונקציות, 98.8% שורות (בדיקות הקצה-לקצה לא נספרות). הצנרת נכשלת אם שינוי מוריד את הכיסוי מתחת לרף. לא כתבתי "כיסוי מושלם" כי הוא לא כזה.</div>
+  <p><b>מקרי קצה שנבדקים:</b> תשובה ריקה, חיפוש של מילה אחת ושל שאלה, <span class="ltr">H.7.1.5</span> (שהאתר מסתיר), פרק 10 (שחסר באתר), יחיד ורבים, גרשיים, ניסיון הזרקה במילים, מסמך שלא קיים, מפתח AI חסר או AI שנכשל, אתר תכ"ם שנכשל, מזהה קובץ שגוי, CORS לקריאה בלבד, ומסך טלפון ושולחן עבודה.</p>
+  <p><b>צנרת אחת, ורק GitHub פורס:</b> בדיקות (<span class="ltr">lint</span>, טיפוסים, <span class="ltr">build</span>, יחידה וכיסוי) ← קצה-לקצה ← פריסה ל-<span class="ltr">Vercel</span> (רק מ-<span class="ltr">main</span> ורק אחרי שהכול עבר) ← 12 בדיקות על האתר החי. אף אחד לא פורס ממחשב אישי.</p>
+</section>
+
+<section class="qa">
+  <h2><span class="n">8</span>חלק ג: חשיבה הנדסית והתאמה ל-Production</h2>
+  <h3>1. תכנון והחלטות הנדסיות</h3>
+  <p><b>השיקולים:</b> החיפוש הוא המוצר, וכל השאר משרת אותו; הנתונים נמצאים ב-Salesforce שהוא מערכת רישום, ולכן מסד מקביל בבעלותנו; שרת פשוט שאפשר לעקוב בו אחרי בקשה בארבעה קבצים; ומה שמסוכן (ה-AI, אתר תכ"ם) יושב מאחורי מחלקה אחת ומתג. <b>חלופות שבדקתי:</b> חיפוש ב-Salesforce עצמו או סינון ברשימה המלאה בדפדפן; <span class="ltr">Elasticsearch</span> (מערכת שנייה בשביל 922 מסמכים); <span class="ltr">SQLite</span> או מסד מנוהל; <span class="ltr">RAG</span> מהתחלה. <b>על מה ויתרתי ב-POC:</b> תוכן המסמכים ותשובה שה-AI כותב, מסד משותף ועמיד, דפדוף בלקוח, הרשאות, מילון עברי (הכללים כתובים ביד) ותגיות.</p>
+  <h3>2. איכות ותחזוקתיות: מגבלה משמעותית</h3>
+  <p><b>המסד חי בתוך תהליך ה-API ונבנה מחדש מקבצים ב-git בכל הפעלה.</b> ההשלכות: הבקשה הראשונה אחרי הפסקה מחכה לבנייה (כ-3 שניות במחשב, 8 עד 10 ב-Vercel); נתונים חדשים מגיעים ל-API החי רק בפריסה; לכל מופע עותק משלו ולכן אי אפשר לכתוב; קובץ הווקטורים (9MB) נכנס ל-git; וכללי העברית וחלון הקרבה של חיפוש ה-AI כוונו ידנית על מדגם קטן. <b>השינוי שהייתי עושה:</b> <span class="ltr">PostgreSQL</span> מנוהל עם <span class="ltr">pgvector</span> (<span class="ltr">Neon</span>, <span class="ltr">Supabase</span>) דרך <code>DATABASE_URL</code>, כשהמשימה היומית היא הכותבת היחידה והווקטורים יושבים במסד ולא ב-git. רק <code>DatabaseService</code> משתנה, כי כל שאילתה כבר עוברת דרך <code>query()</code>. ובנוסף: אוסף שאלות אמיתיות עם ההוראה הצפויה כדי למדוד את החיפוש.</p>
+  <h3>3. תהליכי פיתוח ופריסה</h3>
+  <p><b>מה יקשה על מפתח אחר היום:</b> שני פרויקטי Vercel, משתני הסביבה שלהם (<code>CORS_ORIGINS</code>, <code>VITE_API_URL</code>, <code>GEMINI_API_KEY</code>) וסוד ומשתנים ב-GitHub נוצרו ביד; ה-API נבנה בתוך <code>apps/server</code> ונפרס מהשורש כי נתיבי ה-build יחסיים לשורש; קובצי ה-binary של PGlite נקראים בנתיבים מפורשים כדי ש-Vercel יכלול אותם; והכול קשור ל-Vercel. <b>מה כבר קיים:</b> <code>pnpm install && pnpm dev</code> מריץ הכול בלי סוד, <code>.env.example</code> מפרט כל משתנה, והצנרת בודקת, פורסת ובודקת את האתר החי. <b>מה הייתי משנה:</b> תשתית כקוד (פרויקטי Vercel ומשתניהם במאגר, או <span class="ltr">Dockerfile</span> שמתאים לכל מארח), סקריפט <span class="ltr">bootstrap</span> שיוצר סביבה חדשה ומדפיס מה חסר, וגרסאות נעולות. <b>איך מוודאים אחרי פריסה:</b> 12 ה-<span class="ltr">smoke tests</span> בשלב האחרון של הצנרת, ו-<code>/health</code> שמדווח כמה מסמכים ופרקים נטענו.</p>
+  <h3>4. אבחון וטיפול בתקלות</h3>
+  <p><b>תרחיש:</b> אתר תכ"ם משנה את מבנה הנתונים או שהוא למטה כשהמשימה היומית קוראת אותו. <b>איך זה היה מתבטא:</b> בלי הגנה, המסד היה נטען עם מסמכים בלי מספר, חיפוש לפי מספר לא היה מוצא כלום וה-API עדיין היה נראה תקין. <b>איך מזהים ומטפלים היום:</b> המשימה בודקת את התשובה (חייבת להיות רשימה, עם לפחות 900 מסמכים שיש להם מספר ו-100 פרקים), בונה מהקבצים החדשים מסד כדי להוכיח שהם נטענים, ומריצה את בדיקות השרת. אם משהו לא תקין היא עוצרת, <b>שומרת את הקבצים הישנים</b>, וריצה אדומה מופיעה ב-GitHub. ה-<code>/health</code> מדווח כמה מסמכים ופרקים נטענו, וה-smoke tests מכשילים את הצנרת אם הנתונים החיים לא נטענו. <b>מה הייתי משנה:</b> הודעה למישהו (לא רק ריצה אדומה), תאריך הקריאה האחרונה שהצליחה ב-<code>/health</code>, ועותק מתוארך של הקבצים הקודמים. <b>תרחיש נוסף:</b> <span class="ltr">Gemini</span> נכשל או שהמכסה נגמרה: חיפוש ה-AI עונה 503 ברור, החיפוש במילים לא מושפע, והכשל נרשם ב-<code>AiService</code>.</p>
+</section>
+
+<section>
+  <h2><span class="n">9</span>הרצה, קונפיגורציה והדגמה</h2>
   <ul>
-    <li><b>היברידי:</b> מילים מדויקות ומספר הוראה ממשיכים לשקול, והמשמעות מוסיפה.</li>
-    <li><b>בטוח לכבות:</b> בלי מפתח <span class="ltr">Gemini</span> בשרת, החיפוש לפי משמעות עונה בשגיאה ברורה (503) והחיפוש במילים לא מושפע.</li>
-    <li><b>זה ניסוי:</b> הוא מבוסס על נתוני העל בלבד, לא על תוכן קובצי ה-Word. השלב הבא האפשרי הוא להוסיף את תוכן המסמכים ותשובה שה-AI כותב (<span class="ltr">RAG</span>) עם הפניה למקורות.</li>
+    <li><b>הרצה:</b> <code>pnpm install</code> ואז <code>pnpm dev</code> (דרישות: <span class="ltr">Node ≥ 22</span> ו-<span class="ltr">pnpm 11</span>). האתר ב-<span class="ltr">localhost:5173</span> וה-API ב-<span class="ltr">localhost:3100</span>. אין צורך בסוד כדי להריץ.</li>
+    <li><b>חיפוש ה-AI:</b> מפתח <span class="ltr">Gemini</span> ב-<code>apps/server/.env</code> (<span class="ltr">git</span> מתעלם ממנו), כפי שמופיע ב-<code>.env.example</code>. אף סוד לא נמצא בקוד.</li>
+    <li><b>בדיקות:</b> <code>pnpm test</code>, <code>pnpm test:coverage</code> ו-<code>pnpm test:e2e</code>.</li>
+    <li><b>מדגם הנתונים:</b> <code>apps/server/data/</code> (<code>Document.json</code>, <code>Chapter.json</code>, <code>embeddings.json</code>).</li>
+    <li><b>סרטון הדגמה (עד 3 דקות):</b> מציג את החיפוש במילים (יחיד ורבים, שאלה, "לא נמצא"), ואז מדליק את כפתור ה-AI ומראה את השאלה שמוצאת מה שהחיפוש במילים לא מצא.</li>
   </ul>
 </section>
 

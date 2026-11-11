@@ -22,7 +22,7 @@ Where things are in the code:
 | The text of the interface, the tokens | `apps/web/src/i18n/messages.ts`, `apps/web/src/styles/tokens.css` |
 | The shared types | `packages/contracts/src/index.ts` |
 | The pipeline (checks, deploy, checks of the live site) | `.github/workflows/ci.yml`, `scripts/smoke-test.mjs` ([testing.md](testing.md)) |
-| The presentation document for the interview (Hebrew PDF: problems, the search problem, monorepo, the AI switch) | `docs/overview/` (`node docs/overview/build.mjs` rebuilds the picture and the PDF; its numbers are those of 2026-11-11) |
+| The homework document "מטלת בית" (Hebrew PDF: problems, the search problem, the solution, the AI switch, architecture, tests, part C) | `docs/overview/` (`node docs/overview/build.mjs` rebuilds the picture and the PDF; its numbers are those of 2026-11-11) |
 | The daily reading of the site | `.github/workflows/refresh-data.yml` ([data.md](data.md)) |
 
 Commands (from the root): `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm db:reset`, `pnpm data:refresh`, `pnpm data:embed`, `pnpm db:query "SELECT …"`.

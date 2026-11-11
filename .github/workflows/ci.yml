@@ -40,10 +40,10 @@ jobs:
         run: pnpm typecheck
       - name: Build (server and web)
         run: pnpm build
-      - name: Server unit and end-to-end tests (the real SQL on the real data, in memory; the AI and the Takam site are faked)
-        run: pnpm test:server
-      - name: Web unit and component tests
-        run: pnpm test:web
+      - name: Server unit and end-to-end tests, with the coverage bars (the real SQL on the real data, in memory; the AI and the Takam site are faked)
+        run: pnpm --filter @takam/server test:coverage
+      - name: Web unit and component tests, with the coverage bars
+        run: pnpm --filter @takam/web test:coverage
 
   e2e:
     name: 2. End-to-end tests (Playwright, phone and desktop)
