@@ -125,7 +125,7 @@ describe('DocumentsRepository', () => {
       const no = await search({ inForce: 'no' });
 
       expect(yes.total + no.total).toBe((await search({})).total);
-      expect(yes.items.every((item) => item.isInForce && (item.validTo === null || item.validTo >= '2026-11-11'))).toBe(true);
+      expect(yes.items.every((item) => item.isInForce)).toBe(true);
       expect(no.items.every((item) => !item.isInForce)).toBe(true);
       expect(no.total).toBeGreaterThan(0);
     });
@@ -179,6 +179,16 @@ describe('DocumentsRepository', () => {
       const page = await ask(axis(0), { chapter: '1.6' });
 
       expect(codesOf(page)).toEqual(['H.1.6.6']);
+    });
+  });
+
+  describe('what a list carries', () => {
+    it('gives a line of a list only the summary fields, and the document alone the rest', async () => {
+      const [line] = (await search({ words: 'H.1.2.1' })).items;
+      const document = (await repository.findByCodeText('2026-11-11', 'H.1.2.1')) as DocumentDto;
+
+      expect(Object.keys(line).sort()).toEqual(['chapterCode', 'chapterTitle', 'code', 'codeText', 'isInForce', 'mainChapterCode', 'mainChapterTitle', 'title', 'type']);
+      expect(Object.keys(document)).toEqual(expect.arrayContaining([...Object.keys(line), 'id', 'description', 'keywords', 'version', 'validFrom', 'validTo', 'officialPageUrl', 'fileUrl']));
     });
   });
 

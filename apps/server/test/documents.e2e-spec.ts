@@ -25,6 +25,13 @@ describe('Documents (e2e)', () => {
     expect(list).toMatchObject({ total: 922, relaxed: false });
   });
 
+  it('GET /v1/documents sends lines of a list, not whole documents (the description, keywords and links come with one document)', async () => {
+    const { body } = await get('/v1/documents', { limit: 1 });
+
+    expect(Object.keys((body as DocumentListDto).items[0])).not.toEqual(expect.arrayContaining(['description']));
+    expect(Object.keys((body as DocumentListDto).items[0])).toHaveLength(9);
+  });
+
   it('GET /v1/documents?type=Instruction gives the 418 instructions in the order of the numbers', async () => {
     const { body } = await get('/v1/documents', { type: 'Instruction', limit: 1000 });
 

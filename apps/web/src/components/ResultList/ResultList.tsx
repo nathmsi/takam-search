@@ -1,11 +1,11 @@
-import type { DocumentDto } from '@takam/contracts';
+import type { DocumentSummaryDto } from '@takam/contracts';
 import { Link } from 'react-router';
 import { messages } from '../../i18n/messages';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './ResultList.module.css';
 
 interface ResultListProps {
-  readonly items: readonly DocumentDto[];
+  readonly items: readonly DocumentSummaryDto[];
   readonly total: number;
   /** No document has every word: these are the closest ones. */
   readonly relaxed: boolean;

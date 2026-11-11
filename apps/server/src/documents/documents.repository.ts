@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { DocumentDto, InForceFilter, RelatedDocumentDto } from '@takam/contracts';
+import type { DocumentDto, DocumentSummaryDto, InForceFilter, RelatedDocumentDto } from '@takam/contracts';
 import { DatabaseService } from '../database/database.service';
 
 /** What a search is asked: the words typed, the filters, the page. */
@@ -23,31 +23,36 @@ export type MeaningSearchRequest = Omit<SearchRequest, 'mode'> & { readonly embe
 
 /** One page of the answer, and how many documents match in all. */
 export interface SearchPage {
-  readonly items: DocumentDto[];
+  readonly items: DocumentSummaryDto[];
   readonly total: number;
 }
 
 /**
- * The columns of a document, named as the API names them. $1 is today's date.
+ * The columns of a line of a list, named as the API names them. $1 is today's date.
  * "In force" is not a column: it is worked out from the two dates (a missing date means "no limit").
  */
-const DOCUMENT_COLUMNS = `
-  d.id,
+const SUMMARY_COLUMNS = `
   d.code_text AS "codeText",
   d.code,
   d.title,
   d.type,
+  (coalesce(d.valid_from <= $1::date, true) AND coalesce(d.valid_to >= $1::date, true)) AS "isInForce",
+  c.code AS "chapterCode",
+  c.title AS "chapterTitle",
+  m.code AS "mainChapterCode",
+  m.title AS "mainChapterTitle"
+`;
+
+/** Every column of one document: the summary, and what only the panel of a document needs. */
+const DOCUMENT_COLUMNS = `
+  ${SUMMARY_COLUMNS},
+  d.id,
   d.description,
   CASE WHEN btrim(coalesce(d.keywords, '')) = '' THEN ARRAY[]::text[]
        ELSE regexp_split_to_array(btrim(d.keywords), '\\s*,\\s*') END AS keywords,
   d.version,
   d.valid_from::text AS "validFrom",
   d.valid_to::text AS "validTo",
-  (coalesce(d.valid_from <= $1::date, true) AND coalesce(d.valid_to >= $1::date, true)) AS "isInForce",
-  c.code AS "chapterCode",
-  c.title AS "chapterTitle",
-  m.code AS "mainChapterCode",
-  m.title AS "mainChapterTitle",
   'https://takam.mof.gov.il/document/' || d.code_text AS "officialPageUrl",
   '/v1/documents/' || d.code_text || '/file' AS "fileUrl"
 `;
@@ -96,7 +101,7 @@ const FILTERS = `
 `;
 
 const SEARCH_SQL = `
-  SELECT ${DOCUMENT_COLUMNS}, count(*) OVER ()::int AS "total"
+  SELECT ${SUMMARY_COLUMNS}, count(*) OVER ()::int AS "total"
   ${DOCUMENT_JOINS}
   ${WORD_HITS}
   WHERE ${FILTERS}
@@ -122,7 +127,7 @@ const CLOSENESS_WINDOW = 0.06;
  * words (the same score as the search above), so a document that says the words AND means the same comes first.
  */
 const MEANING_SQL = `
-  SELECT ${DOCUMENT_COLUMNS}, count(*) OVER ()::int AS "total"
+  SELECT ${SUMMARY_COLUMNS}, count(*) OVER ()::int AS "total"
   ${DOCUMENT_JOINS}
   ${WORD_HITS}
   CROSS JOIN LATERAL (SELECT 1 - (d.embedding <=> $8::vector) AS similarity) AS meaning
@@ -159,13 +164,13 @@ export class DocumentsRepository {
   constructor(private readonly database: DatabaseService) {}
 
   async search({ today, words, mode, chapter, type, inForce, limit, offset }: SearchRequest): Promise<SearchPage> {
-    const rows = await this.database.query<DocumentDto & { total: number }>(SEARCH_SQL, [today, words, chapter, type, inForce, mode, limit, offset]);
+    const rows = await this.database.query<DocumentSummaryDto & { total: number }>(SEARCH_SQL, [today, words, chapter, type, inForce, mode, limit, offset]);
     return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _total, ...document }) => document) };
   }
 
   /** Documents ordered by how close their embedding is to the question's. Only the documents that have an embedding. */
   async searchByMeaning({ today, words, chapter, type, inForce, limit, offset, embedding }: MeaningSearchRequest): Promise<SearchPage> {
-    const rows = await this.database.query<DocumentDto & { total: number }>(MEANING_SQL, [today, words, chapter, type, inForce, limit, offset, `[${embedding.join(',')}]`]);
+    const rows = await this.database.query<DocumentSummaryDto & { total: number }>(MEANING_SQL, [today, words, chapter, type, inForce, limit, offset, `[${embedding.join(',')}]`]);
     return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _total, ...document }) => document) };
   }
 

@@ -5,7 +5,7 @@ Base address in development: `http://localhost:3100` (set `PORT`). Everything is
 | Route | Answer |
 |---|---|
 | `GET /health` | `HealthDto`: the server is up, and how many rows the database holds. Outside the `/v1` prefix |
-| `GET /v1/documents` | `DocumentListDto` `{ total, items: DocumentDto[], relaxed, meaning }` |
+| `GET /v1/documents` | `DocumentListDto` `{ total, items: DocumentSummaryDto[], relaxed, meaning }`: a line of the list is only a `DocumentSummaryDto` (9 fields: `codeText`, `code`, `title`, `type`, `isInForce`, the two chapters with their titles); the description, keywords, dates and links come with one document (`DocumentDto`, below) |
 | `GET /v1/documents/:codeText/file` | `302` to the download of the Word file on the Takam site (`/api/DocumentSF/DownloadDocument/<file id>/x`). The server asks the site for the last published version of the document at the click; nothing is stored. `404` (JSON) for an unknown number or a document the site has no file for, `503` when the site cannot be reached |
 | `GET /v1/documents/:codeText` | One `DocumentDetailDto`, by its number (`H.1.2.1`): the `DocumentDto` and `related`, the documents attached to it (its messages, forms, temporary instructions...), oldest first |
 | `GET /v1/chapters` | `ChapterDto[]`: the chapters and sub-chapters with their number of documents |

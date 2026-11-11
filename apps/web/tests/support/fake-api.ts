@@ -1,4 +1,4 @@
-import type { ChapterDto, DocumentDto, DocumentListDto, RelatedDocumentDto } from '@takam/contracts';
+import type { ChapterDto, DocumentDto, DocumentListDto, DocumentSummaryDto, RelatedDocumentDto } from '@takam/contracts';
 import { vi } from 'vitest';
 import { CHAPTERS } from './fixtures';
 
@@ -46,6 +46,11 @@ export function installFakeApi({ documents, related = {}, chapters = CHAPTERS, f
   return { requests, fail: (value: boolean) => void (isFailing = value) };
 }
 
+/** A line of a list, like the real API gives it: only the fields of a summary (no description, keywords, dates or links). */
+function summaryOf({ codeText, code, title, type, isInForce, chapterCode, chapterTitle, mainChapterCode, mainChapterTitle }: DocumentDto): DocumentSummaryDto {
+  return { codeText, code, title, type, isInForce, chapterCode, chapterTitle, mainChapterCode, mainChapterTitle };
+}
+
 function listFor(documents: readonly DocumentDto[], params: URLSearchParams): DocumentListDto {
   const chapter: string | null = params.get('chapter');
   const type: string | null = params.get('type');
@@ -59,7 +64,7 @@ function listFor(documents: readonly DocumentDto[], params: URLSearchParams): Do
   );
   const has = (document: DocumentDto, word: string): boolean => [document.title, document.description ?? '', ...document.keywords, document.codeText].some((text) => text.includes(word));
   const every: DocumentDto[] = filtered.filter((document) => words.every((word) => has(document, word)));
-  if (every.length > 0 || words.length < 2) return { items: every, total: every.length, relaxed: false, meaning: false };
+  if (every.length > 0 || words.length < 2) return { items: every.map(summaryOf), total: every.length, relaxed: false, meaning: false };
   const some: DocumentDto[] = filtered.filter((document) => words.some((word) => has(document, word)));
-  return { items: some, total: some.length, relaxed: some.length > 0, meaning: false };
+  return { items: some.map(summaryOf), total: some.length, relaxed: some.length > 0, meaning: false };
 }

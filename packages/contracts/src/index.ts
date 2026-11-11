@@ -27,23 +27,17 @@ export interface ChapterDto {
   documentCount: number;
 }
 
-/** A document: what a result list and the details of one document both show. */
-export interface DocumentDto {
-  /** The id of the document on the Takam site. */
-  id: number;
+/**
+ * A document as a list shows it: only what a line of the list needs (its number, title, kind, state and chapters). The rest
+ * (description, keywords, dates, links) travels with the document alone ({@link DocumentDto}), when a person opens it.
+ */
+export interface DocumentSummaryDto {
   /** `H.1.2.1`: the number as the site writes it, and the end of the address of its page. */
   codeText: string;
   /** `1.2.1`. */
   code: string | null;
   title: string;
   type: DocumentType;
-  description: string | null;
-  keywords: string[];
-  version: number;
-  /** ISO date `YYYY-MM-DD`: in force since; `null` when the site does not say. */
-  validFrom: string | null;
-  /** ISO date; `null` while the document has no end date. */
-  validTo: string | null;
   /** Computed from the dates and today; never the `isvalid` flag of the Takam API (it means "expired"). */
   isInForce: boolean;
   /** The sub-chapter (`1.2`) and its title; `null` when the site does not say. */
@@ -52,6 +46,19 @@ export interface DocumentDto {
   /** The chapter of that sub-chapter (`1`) and its title. */
   mainChapterCode: string | null;
   mainChapterTitle: string | null;
+}
+
+/** A document with everything about it: what the panel of one document shows. */
+export interface DocumentDto extends DocumentSummaryDto {
+  /** The id of the document on the Takam site. */
+  id: number;
+  description: string | null;
+  keywords: string[];
+  version: number;
+  /** ISO date `YYYY-MM-DD`: in force since; `null` when the site does not say. */
+  validFrom: string | null;
+  /** ISO date; `null` while the document has no end date. */
+  validTo: string | null;
   /** The page of the document on the Takam site. */
   officialPageUrl: string;
   /** The path of the API that sends the person to the file of the document (`/v1/documents/H.1.2.1/file`). */
@@ -79,7 +86,7 @@ export interface DocumentDetailDto extends DocumentDto {
 export interface DocumentListDto {
   /** All the documents that match, before `limit` and `offset`. */
   total: number;
-  items: DocumentDto[];
+  items: DocumentSummaryDto[];
   /**
    * `true` when no document has all the words that were typed: the items are then the closest ones (they have some of the
    * words). `false` for a normal answer.

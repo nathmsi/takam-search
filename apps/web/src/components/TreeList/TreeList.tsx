@@ -1,4 +1,4 @@
-import type { DocumentDto } from '@takam/contracts';
+import type { DocumentSummaryDto } from '@takam/contracts';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -9,7 +9,7 @@ import styles from './TreeList.module.css';
 interface SubChapterGroup {
   readonly code: string;
   readonly title: string;
-  readonly items: DocumentDto[];
+  readonly items: DocumentSummaryDto[];
 }
 
 interface ChapterGroup {
@@ -19,7 +19,7 @@ interface ChapterGroup {
 }
 
 interface TreeListProps {
-  readonly items: readonly DocumentDto[];
+  readonly items: readonly DocumentSummaryDto[];
   readonly total: number;
   readonly selectedCodeText: string | undefined;
   /** The address query of the filters (`?q=…`), kept on every link so the search survives a click. */
@@ -27,7 +27,7 @@ interface TreeListProps {
 }
 
 /** The documents grouped by chapter, then by sub-chapter, in the order they come in (the server sorts them by number). */
-function groupByChapter(items: readonly DocumentDto[]): ChapterGroup[] {
+function groupByChapter(items: readonly DocumentSummaryDto[]): ChapterGroup[] {
   const chapters: Map<string, ChapterGroup> = new Map();
   for (const item of items) {
     const chapterKey: string = item.mainChapterCode ?? '';
