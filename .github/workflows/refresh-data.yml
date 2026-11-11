@@ -51,6 +51,11 @@ jobs:
       - name: Deploy the API (only when the VERCEL_TOKEN secret exists)
         if: (steps.changes.outputs.changed == 'true' || inputs.force_deploy) && env.VERCEL_TOKEN != ''
         run: |
+          # Built inside apps/server (where Vercel finds NestJS), deployed from the root: the paths in the build are root-relative.
+          cd apps/server
           npx vercel@59 pull --yes --environment=production --token="$VERCEL_TOKEN"
           npx vercel@59 build --prod --token="$VERCEL_TOKEN"
+          cd ../..
+          mkdir -p .vercel
+          cp -R apps/server/.vercel/output .vercel/output
           npx vercel@59 deploy --prebuilt --prod --token="$VERCEL_TOKEN"
