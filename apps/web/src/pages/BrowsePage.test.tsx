@@ -93,8 +93,8 @@ describe('BrowsePage, the filters and the list', () => {
     renderApp('/documents?q=תשלום&chapter=1.4');
 
     expect(screen.getByRole('searchbox')).toHaveValue('תשלום');
-    await waitFor(() => expect(screen.getByRole('combobox', { name: 'פרק משני' })).toHaveValue('1.4'));
-    expect(screen.getByRole('combobox', { name: 'פרק ראשי' })).toHaveValue('1');
+    await waitFor(() => expect((screen.getByRole('combobox', { name: 'פרק משני' }) as HTMLInputElement).value).toMatch(/^1\.4 - /));
+    expect((screen.getByRole('combobox', { name: 'פרק ראשי' }) as HTMLInputElement).value).toMatch(/^1 - /);
     expect(await screen.findByText('סה"כ 1 הוראות')).toBeInTheDocument();
   });
 
@@ -103,7 +103,8 @@ describe('BrowsePage, the filters and the list', () => {
     const { user } = renderApp('/documents');
     await screen.findByText('סה"כ 4 הוראות');
 
-    await user.selectOptions(await screen.findByRole('combobox', { name: 'פרק משני' }), '1.4');
+    await user.click(await screen.findByRole('combobox', { name: 'פרק משני' }));
+    await user.click(screen.getByRole('option', { name: /^1\.4 - / }));
 
     expect(await screen.findByText('סה"כ 1 הוראות')).toBeInTheDocument();
   });
@@ -113,10 +114,11 @@ describe('BrowsePage, the filters and the list', () => {
     const { user } = renderApp('/documents?chapter=1.4');
     const sub = await screen.findByRole('combobox', { name: 'פרק משני' });
 
-    await user.selectOptions(sub, '');
+    await user.click(sub);
+    await user.click(within(screen.getByRole('listbox', { name: 'פרק משני' })).getByRole('option', { name: 'הכל' }));
 
     expect(await screen.findByText('סה"כ 3 הוראות')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'פרק ראשי' })).toHaveValue('1');
+    expect((screen.getByRole('combobox', { name: 'פרק ראשי' }) as HTMLInputElement).value).toMatch(/^1 - /);
   });
 
   it('filters by kind of document, and "all" shows every kind', async () => {

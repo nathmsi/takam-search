@@ -98,11 +98,11 @@ More: [docs/README.md](docs/README.md) is the map ([architecture](docs/architect
 |---|---|---|
 | Server unit | The SQL functions, the loader, the search SQL on the real data in memory, the service, the AI module (fake provider, faked `fetch`), the Takam site client | 141 tests with the end-to-end ones below |
 | Server end-to-end | The whole application, one file per route, the AI and the Takam site faked | included above |
-| Web unit and component | Pages over a fake API, every component, the API client, the design tokens (contrast AA) | 89 |
-| Web end-to-end | Playwright on the builds, phone and desktop, axe accessibility in both themes | 100 |
+| Web unit and component | Pages over a fake API, every component, the API client, the design tokens (contrast AA) | 98 |
+| Web end-to-end | Playwright on the builds, phone and desktop, axe accessibility in both themes | 108 |
 | Live site | `scripts/smoke-test.mjs`, 12 checks run after every deploy | 12 |
 
-**Coverage, measured (`pnpm test:coverage`), not perfect:** server 99.0 % of statements, 87.1 % of branches, 100 % of functions and lines; web 97.9 % of statements, 93.7 % of branches, 96.7 % of functions, 98.8 % of lines. The pipeline fails if a change brings the coverage under the bars set in `apps/server/jest.config.js` and `apps/web/vite.config.ts`. The end-to-end tests are not counted in these figures. What is not covered is listed by the report (mostly defensive branches).
+**Coverage, measured (`pnpm test:coverage`), not perfect:** server 99.0 % of statements, 87.1 % of branches, 100 % of functions and lines; web 98.5 % of statements, 93.8 % of branches, 97.8 % of functions, 99.3 % of lines. The pipeline fails if a change brings the coverage under the bars set in `apps/server/jest.config.js` and `apps/web/vite.config.ts`. The end-to-end tests are not counted in these figures. What is not covered is listed by the report (mostly defensive branches).
 
 **Edge cases tested:** an empty answer, a one-word and a question search, `H.7.1.5` (hidden by the site), chapter 10 (missing on the site), singular and plural, quotes, an injection attempt in the words, an unknown document, the AI key missing or the AI failing, the Takam site failing, a wrong file id, CORS read-only, a phone and a desktop screen.
 

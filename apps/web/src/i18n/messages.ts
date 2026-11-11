@@ -33,6 +33,7 @@ export const messages = {
   filterType: 'סוג מידע',
   filterValidity: 'תוקף',
   filterAll: 'הכל',
+  chapterNone: 'לא נמצא פרק מתאים',
   validityYes: 'בתוקף',
   validityNo: 'לא בתוקף',
   filtersLabel: 'סינון ההוראות',

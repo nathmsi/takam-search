@@ -3,6 +3,7 @@ import { useId } from 'react';
 import { messages } from '../../i18n/messages';
 import type { TypeFilter } from '../../services/search-filters';
 import { DOCUMENT_TYPES } from '../../utils/parse-type-filter';
+import { ChapterCombobox } from '../ChapterCombobox/ChapterCombobox';
 import { SearchBox } from '../SearchBox/SearchBox';
 import styles from './FilterBar.module.css';
 
@@ -28,11 +29,9 @@ interface FilterBarProps {
 
 /**
  * The band of filters, in the order of the official site: free text, main chapter, sub-chapter, type of information,
- * validity, and "clear". (The site also has "tags": its list is empty in the API, so it is left out.)
+ * validity, and "clear". The two chapter fields can be typed in to narrow their list. (The site also has "tags": its list is empty in the API, so it is left out.)
  */
 export function FilterBar({ text, chapters, chapter, type, inForce, onTextChange, onChapterChange, onTypeChange, onInForceChange, onClear }: FilterBarProps) {
-  const mainId: string = useId();
-  const subId: string = useId();
   const typeId: string = useId();
   const validityName: string = useId();
   const mainChapter: string = chapter.split('.')[0];
@@ -47,30 +46,10 @@ export function FilterBar({ text, chapters, chapter, type, inForce, onTextChange
           <SearchBox value={text} onChange={onTextChange} label={messages.filterFreeText} size="compact" />
         </div>
         <div className={styles.field}>
-          <label className={styles.label} htmlFor={mainId}>
-            {messages.filterMainChapter}
-          </label>
-          <select id={mainId} className={styles.select} value={mainChapter} onChange={(event) => onChapterChange(event.target.value)}>
-            <option value="">{messages.filterAll}</option>
-            {mains.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.code} - {item.title}
-              </option>
-            ))}
-          </select>
+          <ChapterCombobox label={messages.filterMainChapter} value={mainChapter} options={mains} onChange={onChapterChange} />
         </div>
         <div className={styles.field}>
-          <label className={styles.label} htmlFor={subId}>
-            {messages.filterSubChapter}
-          </label>
-          <select id={subId} className={styles.select} value={subChapter} onChange={(event) => onChapterChange(event.target.value || mainChapter)}>
-            <option value="">{messages.filterAll}</option>
-            {subs.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.code} - {item.title}
-              </option>
-            ))}
-          </select>
+          <ChapterCombobox label={messages.filterSubChapter} value={subChapter} options={subs} onChange={(code) => onChapterChange(code || mainChapter)} />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor={typeId}>

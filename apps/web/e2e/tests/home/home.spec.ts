@@ -32,7 +32,7 @@ test.describe('Home', () => {
 
     await expect(page).toHaveURL(/\/documents\?chapter=1&type=all$/);
     await expect(browse.total).toHaveText('סה"כ 59 הוראות');
-    await expect(browse.mainChapter).toHaveValue('1');
+    await expect(browse.mainChapter).toHaveValue(/^1 - /);
   });
 
   test('the search of the home page opens the list with the words typed', async ({ page }) => {

@@ -30,7 +30,7 @@
 | | Statements | Branches | Functions | Lines |
 |---|---|---|---|---|
 | Server | 99.0 % | 87.1 % | 100 % | 100 % |
-| Web | 97.9 % | 93.7 % | 96.7 % | 98.8 % |
+| Web | 98.5 % | 93.8 % | 97.8 % | 99.3 % |
 
 It is high, **not perfect**, and it is not claimed to be. The bars (`coverageThreshold` in `apps/server/jest.config.js`, `coverage.thresholds` in `apps/web/vite.config.ts`) sit a little under the measured figures, and the pipeline runs the tests with them: a change that lowers the coverage fails the build. Most of what is left uncovered is a defensive branch.
 

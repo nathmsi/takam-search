@@ -125,7 +125,7 @@ test.describe('Browse: the list', () => {
     await browse.goto('/documents?q=התחייבות&chapter=1.3');
 
     await expect(browse.freeText).toHaveValue('התחייבות');
-    await expect(browse.subChapter).toHaveValue('1.3');
+    await expect(browse.subChapter).toHaveValue(/^1\.3 - /);
     await expect(browse.items).toHaveText([/התחייבות בשם המדינה/, /התחייבות מסגרת/]);
   });
 
@@ -133,17 +133,47 @@ test.describe('Browse: the list', () => {
     const browse = new BrowsePage(page);
     await browse.goto();
 
-    await browse.mainChapter.selectOption('10');
+    await browse.choose(browse.mainChapter, /^10 - /);
 
     await expect(browse.total).toHaveText('סה"כ 21 הוראות');
-    await expect(browse.mainChapter.getByRole('option', { name: /ניהול מלאי ומצאי/ })).toHaveCount(1);
+    await browse.mainChapter.click();
+    await expect(page.getByRole('option', { name: /ניהול מלאי ומצאי/ })).toHaveCount(1);
+  });
+
+  test('narrows the list of sub-chapters while typing, as on the official site, and chooses with the keyboard', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.typeIn(browse.subChapter, 'מכרז');
+
+    const options = page.getByRole('listbox').getByRole('option');
+    await expect(options.first()).toContainText('מכרז');
+    expect(await options.count()).toBeLessThan(15);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/chapter=7\./);
+    await expect(browse.subChapter).toHaveValue(/^7\.\d+ - /);
+    await expect(page.getByRole('listbox')).toHaveCount(0);
+  });
+
+  test('says no chapter matches, and Escape closes the list without changing the choice', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto('/documents?chapter=1.4');
+
+    await browse.typeIn(browse.mainChapter, 'zzzz');
+    await expect(page.getByText('לא נמצא פרק מתאים')).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    await expect(page.getByRole('listbox')).toHaveCount(0);
+    await expect(browse.mainChapter).toHaveValue(/^1 - /);
+    await expect(page).toHaveURL(/chapter=1\.4/);
   });
 
   test('filters by sub-chapter, and by kind of document', async ({ page }) => {
     const browse = new BrowsePage(page);
     await browse.goto();
 
-    await browse.subChapter.selectOption('1.4');
+    await browse.choose(browse.subChapter, /^1\.4 - /);
     await expect(browse.total).toHaveText('סה"כ 6 הוראות');
     await browse.typeSelect.selectOption('all');
     await expect(browse.total).toHaveText('סה"כ 7 הוראות');
@@ -284,7 +314,7 @@ test.describe('Browse: the selected document', () => {
       await expect(browse.list).toBeHidden();
       await page.getByRole('link', { name: 'חזרה לרשימה' }).click();
       await expect(browse.list).toBeVisible();
-      await expect(browse.subChapter).toHaveValue('1.4');
+      await expect(browse.subChapter).toHaveValue(/^1\.4 - /);
     } else {
       await expect(browse.list).toBeVisible();
       await expect(browse.detail).toBeVisible();

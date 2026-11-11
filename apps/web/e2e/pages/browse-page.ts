@@ -46,6 +46,18 @@ export class BrowsePage {
     await this.freeText.fill(words);
   }
 
+  /** Opens a chapter field and clicks the option whose text matches. */
+  async choose(field: Locator, option: RegExp): Promise<void> {
+    await field.click();
+    await this.page.getByRole('option', { name: option }).click();
+  }
+
+  /** Types in a chapter field to narrow its list (it stays open). */
+  async typeIn(field: Locator, text: string): Promise<void> {
+    await field.click();
+    await field.fill(text);
+  }
+
   validity(name: 'הכל' | 'בתוקף' | 'לא בתוקף'): Locator {
     return this.page.getByRole('radio', { name });
   }

@@ -7,6 +7,8 @@ vi.stubEnv('VITE_API_URL', '');
 
 // jsdom has no scrollTo: the layout calls it when the page changes.
 window.scrollTo = vi.fn();
+// ... nor scrollIntoView: the lists of chapters call it to keep the active option in sight.
+Element.prototype.scrollIntoView = vi.fn();
 
 afterEach(() => {
   cleanup();

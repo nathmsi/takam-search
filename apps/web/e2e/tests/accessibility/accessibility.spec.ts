@@ -40,6 +40,15 @@ for (const theme of ['light', 'dark'] as const) {
       expect(await violationsOf(page)).toEqual([]);
     });
 
+    test('the open list of chapters has no detectable violation', async ({ page }) => {
+      const browse = new BrowsePage(page);
+      await browse.goto();
+      await browse.subChapter.click();
+      await expect(page.getByRole('listbox').getByRole('option').first()).toBeVisible();
+
+      expect(await violationsOf(page)).toEqual([]);
+    });
+
     test('the ranked results of a question have no detectable violation', async ({ page }) => {
       const browse = new BrowsePage(page);
       await browse.goto();
