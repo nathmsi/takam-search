@@ -10,6 +10,14 @@ const RETRY_STATUS = new Set([429, 500, 502, 503, 504]);
 const RETRY_DELAYS_MS = [400, 1200, 2500];
 const TASK_TYPES: Record<EmbeddingTask, string> = { document: 'RETRIEVAL_DOCUMENT', query: 'RETRIEVAL_QUERY' };
 
+/** The four things we use of the answer of `fetch`. Written here because the build of Vercel sees an incomplete `Response` type. */
+interface HttpAnswer {
+  readonly ok: boolean;
+  readonly status: number;
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
+
 interface BatchAnswer {
   readonly embeddings?: ReadonlyArray<{ readonly values?: number[] }>;
 }
@@ -41,15 +49,15 @@ export class GeminiProvider implements AiProvider {
     return vectors;
   }
 
-  /** Posts to Gemini and waits and asks again on the passing errors. The type of the answer is the one of `fetch` itself. */
-  private async post(body: object) {
+  /** Posts to Gemini and waits and asks again on the passing errors. */
+  private async post(body: object): Promise<HttpAnswer> {
     for (let attempt = 0; ; attempt++) {
-      const response = await fetch(URL, {
+      const response = (await fetch(URL, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY as string },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
+      })) as unknown as HttpAnswer;
       if (response.ok) return response;
       if (!RETRY_STATUS.has(response.status) || attempt >= RETRY_DELAYS_MS.length) {
         throw new Error(`Gemini answered ${response.status}: ${(await response.text()).slice(0, 300)}`);
