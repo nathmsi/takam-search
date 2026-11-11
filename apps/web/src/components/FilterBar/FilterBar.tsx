@@ -19,20 +19,18 @@ interface FilterBarProps {
   readonly chapter: string;
   readonly type: TypeFilter;
   readonly inForce: InForceFilter;
-  readonly meaning: boolean;
   readonly onTextChange: (text: string) => void;
   readonly onChapterChange: (chapter: string) => void;
   readonly onTypeChange: (type: TypeFilter) => void;
   readonly onInForceChange: (inForce: InForceFilter) => void;
-  readonly onMeaningChange: (meaning: boolean) => void;
   readonly onClear: () => void;
 }
 
 /**
  * The band of filters, in the order of the official site: free text, main chapter, sub-chapter, type of information,
- * validity, and "clear". In the free text field, the small experiment toggle "search by meaning". (The site also has "tags": its list is empty in the API, so it is left out.)
+ * validity, and "clear". (The site also has "tags": its list is empty in the API, so it is left out.)
  */
-export function FilterBar({ text, chapters, chapter, type, inForce, meaning, onTextChange, onChapterChange, onTypeChange, onInForceChange, onMeaningChange, onClear }: FilterBarProps) {
+export function FilterBar({ text, chapters, chapter, type, inForce, onTextChange, onChapterChange, onTypeChange, onInForceChange, onClear }: FilterBarProps) {
   const mainId: string = useId();
   const subId: string = useId();
   const typeId: string = useId();
@@ -46,7 +44,7 @@ export function FilterBar({ text, chapters, chapter, type, inForce, meaning, onT
     <form className={styles.band} role="search" aria-label={messages.filtersLabel} onSubmit={(event) => event.preventDefault()}>
       <div className={styles.row}>
         <div className={`${styles.field} ${styles.text}`}>
-          <SearchBox value={text} onChange={onTextChange} label={messages.filterFreeText} size="compact" toggle={{ label: messages.filterMeaning, isOn: meaning, onToggle: onMeaningChange }} />
+          <SearchBox value={text} onChange={onTextChange} label={messages.filterFreeText} size="compact" />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor={mainId}>

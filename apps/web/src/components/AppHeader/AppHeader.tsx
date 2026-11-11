@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router';
 import { messages } from '../../i18n/messages';
 import { Icon } from '../Icon/Icon';
+import { MeaningToggle } from '../MeaningToggle/MeaningToggle';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import styles from './AppHeader.module.css';
 
@@ -8,7 +9,7 @@ const TAKAM_SITE = 'https://takam.mof.gov.il/';
 
 /**
  * The band at the top of every page, in the order of the official site: the name, then the way around (home, search),
- * then the tools (the official site, the theme).
+ * then the tools (the official site, the search by meaning on the search pages, the theme).
  */
 export function AppHeader() {
   return (
@@ -36,6 +37,7 @@ export function AppHeader() {
             <Icon name="external" />
             <span className={styles.linkText}>{messages.officialSite}</span>
           </a>
+          <MeaningToggle />
           <ThemeToggle />
         </div>
       </div>

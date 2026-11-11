@@ -93,7 +93,7 @@ export function BrowsePage() {
   }, [bestMatch, searchKey, search, navigate]);
   useDocumentTitle(selected.data ? `${selected.data.code ?? selected.data.codeText} ${selected.data.title}` : messages.browseTitle);
 
-  const changeParam = (name: 'chapter' | 'type' | 'inForce' | 'meaning', value: string, defaultValue: string): void => {
+  const changeParam = (name: 'chapter' | 'type' | 'inForce', value: string, defaultValue: string): void => {
     setSearchParams(
       (previous) => {
         const next = new URLSearchParams(previous);
@@ -118,12 +118,10 @@ export function BrowsePage() {
         chapter={chapter}
         type={type}
         inForce={inForce}
-        meaning={meaning}
         onTextChange={setDraft}
         onChapterChange={(value) => changeParam('chapter', value, '')}
         onTypeChange={(value) => changeParam('type', value, DEFAULT_TYPE)}
         onInForceChange={(value) => changeParam('inForce', value, 'all')}
-        onMeaningChange={(value) => changeParam('meaning', 'yes', value ? '' : 'yes')}
         onClear={clearAll}
       />
 

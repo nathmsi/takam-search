@@ -1,0 +1,28 @@
+.button {
+  display: grid;
+  place-items: center;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-on-header-muted);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.button:hover {
+  background: var(--color-header-hover);
+  color: var(--color-on-header);
+}
+
+.button:focus-visible {
+  outline-color: var(--color-focus-on-dark);
+}
+
+/* On: a solid disc, like the logo of the header. */
+.on,
+.on:hover {
+  background: var(--color-on-header);
+  color: var(--color-header-bg);
+}
