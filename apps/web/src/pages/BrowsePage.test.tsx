@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { installFakeApi } from '../../tests/support/fake-api';
 import { DOCUMENTS } from '../../tests/support/fixtures';
 import { renderApp } from '../../tests/support/render-app';
@@ -274,5 +274,57 @@ describe('BrowsePage, the selected document', () => {
     renderApp('/documents/H.1.2.1?q=תקציב');
 
     expect(await screen.findByRole('link', { name: 'חזרה לרשימה' })).toHaveAttribute('href', '/documents?q=%D7%AA%D7%A7%D7%A6%D7%99%D7%91');
+  });
+});
+
+describe('BrowsePage, the best match opens by itself', () => {
+  const screenIs = (wide: boolean): void => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: wide, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+  };
+
+  afterEach(() => {
+    // @ts-expect-error: back to the jsdom default, which has no matchMedia (the app then treats the screen as narrow)
+    delete window.matchMedia;
+  });
+
+  it('opens the best match of a search on a wide screen', async () => {
+    screenIs(true);
+    installFakeApi({ documents: ALL });
+
+    renderApp('/documents?q=תשלום');
+
+    const detail = await screen.findByRole('region', { name: 'פרטי ההוראה' });
+    expect(await within(detail).findByRole('heading', { level: 2, name: /מועדי תשלום/ })).toBeInTheDocument();
+  });
+
+  it('keeps the document that is open when it is one of the results', async () => {
+    screenIs(true);
+    const second = { ...payments, id: 9, codeText: 'H.1.4.9', title: 'תשלום נוסף' };
+    installFakeApi({ documents: [...ALL, second] });
+
+    renderApp('/documents/H.1.4.9?q=תשלום');
+
+    const detail = await screen.findByRole('region', { name: 'פרטי ההוראה' });
+    expect(await within(detail).findByRole('heading', { level: 2, name: /תשלום נוסף/ })).toBeInTheDocument();
+  });
+
+  it('opens nothing by itself on a narrow screen, where opening a document would hide the list', async () => {
+    screenIs(false);
+    installFakeApi({ documents: ALL });
+
+    renderApp('/documents?q=תשלום');
+
+    await screen.findByText('סה"כ 1 הוראות');
+    expect(screen.getByText('בחרו הוראה מהרשימה כדי לראות את פרטיה.')).toBeInTheDocument();
+  });
+
+  it('opens nothing without words (the tree), nor when nothing was found', async () => {
+    screenIs(true);
+    installFakeApi({ documents: ALL });
+
+    renderApp('/documents');
+
+    await screen.findByText('סה"כ 4 הוראות');
+    expect(screen.getByText('בחרו הוראה מהרשימה כדי לראות את פרטיה.')).toBeInTheDocument();
   });
 });

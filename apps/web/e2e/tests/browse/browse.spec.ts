@@ -41,6 +41,22 @@ test.describe('Browse: the list', () => {
     await expect(page).toHaveURL(/q=/);
   });
 
+  test('opens the best match of a search by itself on a wide screen, and nothing on a phone (it would hide the list)', async ({ page, isMobile }) => {
+    const browse = new BrowsePage(page);
+    await browse.goto();
+
+    await browse.search('מועדי תשלום');
+
+    if (isMobile) {
+      await expect(browse.items).toHaveText([/מועדי תשלום/]);
+      await expect(page).not.toHaveURL(/\/documents\/H/);
+      return;
+    }
+    await expect(browse.detailTitle).toContainText('מועדי תשלום');
+    await expect(page).toHaveURL(/\/documents\/H\.1\.4\.3\?q=/);
+    await expect(browse.items.first()).toHaveAttribute('aria-current', 'page');
+  });
+
   test('finds the same documents for the singular and the plural (the Takam site finds 2 and 4)', async ({ page }) => {
     const browse = new BrowsePage(page);
     await browse.goto();

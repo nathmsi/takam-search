@@ -1,5 +1,6 @@
+import type { DocumentListDto } from '@takam/contracts';
 import { useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router';
 import { DocumentPanel } from '../components/DocumentPanel/DocumentPanel';
 import { FilterBar } from '../components/FilterBar/FilterBar';
 import { Icon } from '../components/Icon/Icon';
@@ -12,6 +13,7 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useDocument } from '../hooks/useDocument';
 import { useDocumentList } from '../hooks/useDocumentList';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useIsWideScreen } from '../hooks/useIsWideScreen';
 import { messages } from '../i18n/messages';
 import { ApiError } from '../services/api-error';
 import { buildSearchString } from '../services/build-search-string';
@@ -22,6 +24,27 @@ import { parseTypeFilter } from '../utils/parse-type-filter';
 import styles from './BrowsePage.module.css';
 
 const TYPING_DELAY_MS = 250;
+
+interface BestMatchRequest {
+  readonly list: DocumentListDto | undefined;
+  /** The list is the answer to the words now in the address, not the previous list kept on screen while the next one loads. */
+  readonly isCurrent: boolean;
+  readonly hasWords: boolean;
+  readonly isWide: boolean;
+  /** The document open now, if any. */
+  readonly selected: string | undefined;
+}
+
+/**
+ * The document to open by itself after a search: the best match (the server ranks them), when the screen shows the list and
+ * the document side by side and the document open is not one of the results. On a phone opening a document hides the list,
+ * so nothing opens by itself there. `undefined` = leave things as they are.
+ */
+function pickBestMatch({ list, isCurrent, hasWords, isWide, selected }: BestMatchRequest): string | undefined {
+  if (!hasWords || !isWide || !isCurrent || list === undefined) return undefined;
+  if (list.items.some((item) => item.codeText === selected)) return undefined;
+  return list.items[0]?.codeText;
+}
 
 /**
  * The search page, laid out like the official site: the filters across the top, then the list on one side and the selected
@@ -59,6 +82,8 @@ export function BrowsePage() {
   const list = useDocumentList(filters);
   const chapters = useChapters();
   const selected = useDocument(codeText);
+  const isWide: boolean = useIsWideScreen();
+  const bestMatch: string | undefined = pickBestMatch({ list: list.data, isCurrent: !list.isPlaceholderData, hasWords: q.trim() !== '', isWide, selected: codeText });
   useDocumentTitle(selected.data ? `${selected.data.code ?? selected.data.codeText} ${selected.data.title}` : messages.browseTitle);
 
   const changeParam = (name: 'chapter' | 'type' | 'inForce' | 'meaning', value: string, defaultValue: string): void => {
@@ -79,6 +104,7 @@ export function BrowsePage() {
 
   return (
     <main id="main" tabIndex={-1} className={styles.page}>
+      {bestMatch === undefined ? null : <Navigate replace to={{ pathname: `/documents/${bestMatch}`, search }} />}
       <h1 className={styles.srOnly}>{messages.browseTitle}</h1>
       <FilterBar
         text={draft}
