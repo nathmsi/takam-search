@@ -88,7 +88,7 @@ The API is deployed from the repository root, with `VERCEL_ORG_ID` and `VERCEL_P
 - The search reads titles, descriptions, keywords and numbers, **not the text of the instructions**, and it has no notion of meaning: a synonym is not a match.
 - The Hebrew rules (endings and prefixes) are simple rules, not a dictionary: they are right most of the time and sometimes wrong, in the same way on both sides of the comparison. They are tested on word pairs, not measured on real questions.
 - 7 of the 11 instructions that the site does not show in its tree say in their description that they were merged or renumbered, so the site probably hides them on purpose; here they are kept and their description tells where they went. They count as "in force" because the data gives them no end date.
-- The data is a snapshot of 2026-11-11, two committed files. The interface is Hebrew only.
+- The data is two committed files, read again from the site every day by a workflow (`pnpm data:refresh`); between two readings it is up to a day old. The interface is Hebrew only.
 - The harm of the problem on real users was not measured.
 
 ## Engineering questions (part C of the assignment)
@@ -107,7 +107,7 @@ The API is deployed from the repository root, with `VERCEL_ORG_ID` and `VERCEL_P
 
 ### 2. A limit that hurts maintenance
 
-**The data is a snapshot of two committed JSON files**, loaded when the database is empty. When the Takam site changes an instruction, nothing here changes until someone re-reads the site, replaces the files and resets the database (`pnpm db:reset`). The Hebrew cleaning is also a set of hand-written rules, not a dictionary, so a wrong stem needs a change in `schema.sql` and a test on word pairs. The fix I would make first is a scheduled job that re-reads the site's API, rebuilds the tables, and reports what changed.
+**The data is two committed JSON files**, loaded when the database is empty, and read again from the site once a day. A change on the site shows up here after the next run (up to a day), and the redeploy that brings it to the live API needs a `VERCEL_TOKEN` secret. The Hebrew cleaning is also a set of hand-written rules, not a dictionary, so a wrong stem needs a change in `schema.sql` and a test on word pairs. What I would add next: a report of what changed in each daily run, and a persistent PostgreSQL so that a refresh does not need a redeploy.
 
 ### 3. Deploying it from another developer's machine
 

@@ -1,0 +1,51 @@
+name: Refresh the data
+
+# Every day: read the Takam site again. When it changed, test the new data, commit it and redeploy the API.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    name: Read the site, test, commit, deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_API_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read the site (fails, and keeps the old files, when its answer looks wrong)
+        run: pnpm --filter @takam/server data:refresh
+      - name: Did the data change?
+        id: changes
+        run: |
+          if git diff --quiet -- apps/server/data; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Test the server on the new data
+        if: steps.changes.outputs.changed == 'true'
+        run: pnpm test:server
+      - name: Commit the new data
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/server/data
+          git commit -m "chore(data): read the Takam site again"
+          git push
+      - name: Deploy the API (only when the VERCEL_TOKEN secret exists)
+        if: steps.changes.outputs.changed == 'true' && env.VERCEL_TOKEN != ''
+        run: |
+          npx vercel@59 pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel@59 build --prod --token="$VERCEL_TOKEN"
+          npx vercel@59 deploy --prebuilt --prod --token="$VERCEL_TOKEN"

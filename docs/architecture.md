@@ -32,7 +32,7 @@ A Vite + React single-page app, right-to-left Hebrew, in the order of the offici
 | **The search is one SQL query**, on cleaned columns of the table | It runs where the data is, in the open, and a person can read it (`SEARCH_SQL`). The same function cleans the stored text and the words typed, so both sides always agree | A hand-made stemming rule, not a dictionary: wrong sometimes, in the same way on both sides |
 | **PostgreSQL inside the server (PGlite)** | A real PostgreSQL, the same SQL as a server, with nothing to install: `pnpm install && pnpm dev` is enough. The tests run the real SQL on the real data | One process owns the database folder. A shared server (PostgreSQL) is the same SQL behind another connection |
 | **Only the metadata of the site's objects** (title, description, keywords, number, dates, chapters) | It is what the site already knows; no document is read | The text of an instruction is not searched |
-| **Two plain tables**, loaded from the two JSON files when the database is empty | Easy to read, easy to query (`pnpm db:query`) | Updating the data means resetting the database (`pnpm db:reset`) |
+| **Two plain tables**, loaded from the two JSON files when the database is empty | Easy to read, easy to query (`pnpm db:query`) | Updating the data means `pnpm data:refresh` (daily by a workflow) then a redeploy or `pnpm db:reset` |
 | **"In force" is computed from the dates, in SQL** | The API flag `isvalid` is inverted ([site-audit.md](site-audit.md)) | A merged instruction has no end date in the data, so it counts as in force |
 | **Every typed word must match, otherwise the closest documents, said so** | A question is never a dead end, and a person is told when the answer is only close | A fixed rule: "some words" is not a ranking by meaning |
 | **The server is plain**: controller, service, repository per folder; no ports, no ORM | Short files, the SQL visible | A different database is a change of `database.service.ts`, not a plug-in |
@@ -43,4 +43,4 @@ A Vite + React single-page app, right-to-left Hebrew, in the order of the offici
 
 ## Not in this POC (on purpose)
 
-Authentication (there is nothing private), rate limiting, the text of the documents, tags, semantic search (a synonym is not a match), pagination in the web app (the API has `limit` and `offset`; the list asks for 1000), a collector that re-reads the site (the data is the two committed files), the attached files.
+Authentication (there is nothing private), rate limiting, the text of the documents, tags, semantic search (a synonym is not a match), pagination in the web app (the API has `limit` and `offset`; the list asks for 1000), the attached files.

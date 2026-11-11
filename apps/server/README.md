@@ -19,6 +19,7 @@ src/
   errors/                  the one JSON body of every error
 data/                      the two objects of the Takam site
 scripts/query.ts           pnpm db:query "SELECT ..."
+scripts/refresh-data.ts    pnpm data:refresh (read the site again, replace data/)
 test/                      end-to-end tests, one file per route
 ```
 

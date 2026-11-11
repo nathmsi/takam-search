@@ -12,7 +12,8 @@
     "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --selectProjects unit",
     "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --selectProjects e2e",
     "db:reset": "node -e \"require('node:fs').rmSync('.pgdata', { recursive: true, force: true })\"",
-    "db:query": "tsx scripts/query.ts"
+    "db:query": "tsx scripts/query.ts",
+    "data:refresh": "tsx scripts/refresh-data.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",

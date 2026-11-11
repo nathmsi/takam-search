@@ -2,7 +2,7 @@
 
 ## Where it comes from
 
-Two files in `apps/server/data/`: the objects of the Takam site, exactly as its API gave them on 2026-11-11.
+Two files in `apps/server/data/`: the objects of the Takam site, exactly as its API gave them (read again every day, see "Keeping the data up to date").
 
 | File | What | Rows |
 |---|---|---|
@@ -14,6 +14,15 @@ Nothing else is kept: no Word file, no text of the instructions, no versions (an
 ## What the server does with them
 
 When the server starts, `src/database/database.service.ts` opens its database, runs `schema.sql`, and **if the tables are empty** fills them with `src/database/load-data.ts`. The database is PostgreSQL itself, running inside the server (PGlite): nothing to install. It lives in `apps/server/.pgdata/` (created at the first start, about 40 MB, not committed); `pnpm db:reset` deletes it so the next start rebuilds it.
+
+## Keeping the data up to date
+
+`pnpm data:refresh` (in `apps/server`, `scripts/refresh-data.ts`) reads `GET /api/Document` and `GET /api/Chapter` from the site again and replaces the two files. The files are the answers byte for byte, so `git diff` shows something only when the site changed.
+
+- It **changes nothing** when the answer looks wrong: not a list, fewer than 900 documents with a number, fewer than 100 chapters (`checkSiteData`), or an HTTP error. It also builds the database from the new files, and puts the old files back if that fails.
+- The site refuses requests without a `User-Agent`; the script sends `takam-search-data-refresh`. `TAKAM_API_URL` (default `https://takam.mof.gov.il/api`) changes the address.
+- **Every day at 04:00 UTC** the GitHub workflow `.github/workflows/refresh-data.yml` runs it (and on demand from the Actions tab). When the files changed it runs the server tests, commits `chore(data): read the Takam site again` to `main`, and redeploys the API on Vercel. That last step runs only if the repository has a `VERCEL_TOKEN` secret (the project and team ids are repository variables).
+- The API keeps the data it loaded at start: on Vercel the database is rebuilt in memory at every cold start, so a redeploy is what brings the new data; locally, restart the server after `pnpm db:reset`.
 
 ## The tables (`schema.sql`)
 
