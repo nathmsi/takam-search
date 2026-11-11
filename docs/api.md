@@ -52,7 +52,7 @@ No result is **not** an error: `GET /v1/documents?q=zzzz` answers `200` with `{ 
 |---|---|---|
 | `PORT` | `3100` | Port of the API |
 | `CORS_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Allowed browser origins, comma separated |
-| `GEMINI_API_KEY` | none | **Secret.** The key of the search by meaning (and of `pnpm data:embed`). Not set: that search answers 503 |
+| `GEMINI_API_KEY` | none | **Secret.** In development put it in `apps/server/.env` (ignored by git; `pnpm dev` and `pnpm data:embed` read it). The key of the search by meaning (and of `pnpm data:embed`). Not set: that search answers 503 |
 | `AI_PROVIDER` | the first provider that has a key | Forces a provider (`gemini`) |
 | `DATABASE_DIR` | `apps/server/.pgdata` | Where the database lives; `memory://` keeps it in memory (the tests do) |
 

@@ -5,7 +5,7 @@
   "description": "The API of Takam Search (NestJS, REST): searches the documents of the Takam site in a local PostgreSQL database.",
   "scripts": {
     "build": "nest build",
-    "dev": "nest start --watch",
+    "dev": "nest start --watch --exec \"node --env-file-if-exists=.env\"",
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
@@ -14,7 +14,7 @@
     "db:reset": "node -e \"require('node:fs').rmSync('.pgdata', { recursive: true, force: true })\"",
     "db:query": "tsx scripts/query.ts",
     "data:refresh": "tsx scripts/refresh-data.ts",
-    "data:embed": "tsx scripts/embed-documents.ts"
+    "data:embed": "tsx --env-file-if-exists=.env scripts/embed-documents.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
