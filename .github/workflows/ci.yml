@@ -59,14 +59,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Install Chromium (each try is cut after 4 minutes, the package mirror of the runner sometimes hangs)
-        run: |
-          for attempt in 1 2; do
-            timeout 240 pnpm --filter @takam/web exec playwright install --with-deps chromium && exit 0
-            echo "Attempt $attempt did not finish"; sleep 10
-          done
-          echo "Falling back to the browser alone: the runner image already has the system libraries it needs"
-          pnpm --filter @takam/web exec playwright install chromium
+      # The browser alone: the runner image already has the system libraries. (`--with-deps` goes through the package mirror of the
+      # runner, which hung twice for 4 minutes in a row.)
+      - name: Install Chromium
+        run: pnpm --filter @takam/web exec playwright install chromium
       - name: E2E tests on the builds, with the real server and the real web app
         run: pnpm --filter @takam/web exec playwright test
       - name: Playwright report
