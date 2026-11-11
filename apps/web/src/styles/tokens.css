@@ -31,9 +31,8 @@
   --color-on-bar-muted: #475569;
   --color-bar-hover: #e8eef4;
 
-  /* The home page: a pale sky, a turquoise band behind the topics, and the colors of its own illustration. */
+  /* The home page: a pale sky above the page color, and the colors of its own illustration. */
   --color-home-sky: #dce7ef;
-  --color-home-band: #1593b5;
   --color-art-folder: #f6c945;
   --color-art-folder-edge: #e0ac1c;
   --color-art-frame: #2b3a4f;
@@ -107,7 +106,6 @@
   --color-text-muted: #a3b1c6;
 
   --color-home-sky: #0f1b2e;
-  --color-home-band: #0f4a63;
   --color-art-frame: #0a1220;
   --color-art-screen: #1b2740;
   --color-art-paper: #e6ecf5;

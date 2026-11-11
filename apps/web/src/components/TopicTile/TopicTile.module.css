@@ -1,4 +1,4 @@
-/* A white square with its content centered, a soft shadow and no border: as the topics of the official home page. */
+/* A rounded tile on the page color, its content centered: the number, the name, how many documents. */
 .tile {
   display: grid;
   align-content: center;
@@ -7,17 +7,20 @@
   block-size: 100%;
   min-block-size: 7.5rem;
   padding: var(--space-3);
-  background: var(--color-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
   color: var(--color-text);
   text-align: center;
   text-decoration: none;
-  box-shadow: var(--shadow-card);
   transition:
+    border-color var(--motion-base) var(--motion-ease),
     box-shadow var(--motion-base) var(--motion-ease),
     transform var(--motion-base) var(--motion-ease);
 }
 
 .tile:hover {
+  border-color: var(--color-accent);
   box-shadow: var(--shadow-card-hover);
   transform: translateY(-2px);
 }

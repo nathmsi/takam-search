@@ -13,8 +13,8 @@ import { messages } from '../i18n/messages';
 import styles from './HomePage.module.css';
 
 /**
- * The home page, in the order and the look of the official site: a slanted deep-blue panel with the welcome and a drawing
- * on one side; on the other the search, the topics (the chapters) and the button to the whole list.
+ * The home page, in the order of the official site: a deep-blue card with the welcome and a drawing on one side; on the
+ * other a card with the search, the topics (the chapters) and the button to the whole list.
  */
 export function HomePage() {
   useDocumentTitle(undefined);

@@ -1,10 +1,9 @@
-/* Full width: the pale sky on top and the turquoise band behind the lower half, as on the official home page. */
+/* Full width: a pale sky that fades into the page color, behind two rounded cards. */
 .page {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  background: linear-gradient(to bottom, var(--color-home-sky) 0 55%, var(--color-home-band) 55% 100%);
-  /* The colors fill the screen even when the content is short (the band under the header is 4rem). */
-  min-block-size: calc(100dvh - 4rem);
+  background: linear-gradient(to bottom, var(--color-home-sky), var(--color-bg) 32rem);
+  min-block-size: calc(100dvh - 4.25rem);
 }
 
 .inner {
@@ -18,7 +17,7 @@
   padding: var(--space-5) var(--space-4) var(--space-7);
 }
 
-/* The welcome panel. On a phone it is a plain block; on a desktop its far edge is slanted, like the official one. */
+/* The welcome card: deep blue, rounded, with our own drawing. */
 .welcome {
   display: grid;
   gap: var(--space-5);
@@ -26,6 +25,7 @@
   border-radius: var(--radius-lg);
   background: var(--color-hero-bg);
   color: var(--color-on-hero);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .welcomeText {
@@ -36,7 +36,7 @@
 
 .welcomeTitle {
   font-size: var(--text-2xl);
-  font-weight: 700;
+  font-weight: 800;
   line-height: var(--leading-tight);
 }
 
@@ -50,10 +50,16 @@
   justify-items: center;
 }
 
+/* The second card: the search, the topics and the way to the whole list. */
 .entry {
   display: grid;
   gap: var(--space-5);
   min-inline-size: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .search {
@@ -72,15 +78,15 @@
   padding-inline: var(--space-5);
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-header-bg);
-  color: var(--color-on-header);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   font-weight: 700;
   cursor: pointer;
   transition: background var(--motion-fast) var(--motion-ease);
 }
 
 .submit:hover {
-  background: var(--color-header-hover);
+  background: var(--color-accent-strong);
 }
 
 .topics {
@@ -90,7 +96,7 @@
 
 .topicsTitle {
   font-size: var(--text-lg);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .tiles {
@@ -106,21 +112,17 @@
   gap: var(--space-2);
   min-block-size: var(--touch-target);
   padding-inline: var(--space-6);
+  border: 1.5px solid var(--color-accent);
   border-radius: var(--radius-pill);
-  background: var(--color-header-bg);
-  color: var(--color-on-header);
+  color: var(--color-accent);
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   transition: background var(--motion-fast) var(--motion-ease);
 }
 
 .showAll:hover {
-  background: var(--color-header-hover);
-}
-
-.showAll:focus-visible {
-  outline-color: var(--color-focus-on-dark);
+  background: var(--color-accent-soft);
 }
 
 /* The chevron points toward the page it leads to: left, in a right-to-left page. */
@@ -130,29 +132,21 @@
 
 @media (min-width: 62rem) {
   .inner {
-    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-    gap: var(--space-6);
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: var(--space-5);
     min-block-size: 36rem;
     padding-block: var(--space-6) var(--space-7);
   }
 
-  /* The panel grows to the edge of the page and its end side is cut on a slant, over the band and the sky. */
+  /* The card is as tall as the one beside it; its drawing sits at the bottom. */
   .welcome {
     grid-template-rows: auto 1fr;
     align-self: stretch;
     padding: var(--space-7) var(--space-6) var(--space-6);
-    border-radius: 0;
-    clip-path: polygon(31% 0, 100% 0, 100% 100%, 0 100%);
   }
 
-  /* The text stays out of the cut corner: the slant eats the first third of the top edge, on the far side of the panel. */
-  .welcomeText {
-    padding-inline-end: 24%;
-  }
-
-  /* The drawing sits against the reading side, away from the slant, at the bottom of the panel. */
   .art {
     align-items: end;
-    justify-items: start;
+    justify-items: center;
   }
 }
