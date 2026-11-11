@@ -45,4 +45,4 @@ One thing at a time: the list, or the document chosen from it (with a "back to t
 
 ## State
 
-The filters live in the **address** (`?q=&chapter=&type=&inForce=&meaning=`), the selected document in the **path**. Every link of the list carries the filters, so a click never loses the search, a view can be shared, and the back button works. No `type` in the address means the instructions.
+**Server state: TanStack Query is the one cache** (`QueryClient` in `main.tsx`): the key of a search is its filters, the key of a document is its number, so a search or a document already seen shows at once; `staleTime` 5 minutes (chapters: the whole visit), no refetch on window focus, `keepPreviousData` on the list (no flash of an empty page), requests merged and cancelled by the query key, two more tries on a server failure and none on a 4xx (`hooks/query-options.ts`). The filters live in the **address** (`?q=&chapter=&type=&inForce=&meaning=`), the selected document in the **path**. Every link of the list carries the filters, so a click never loses the search, a view can be shared, and the back button works. No `type` in the address means the instructions.

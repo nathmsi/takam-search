@@ -80,9 +80,11 @@ Takam site ──(daily job)──▶ data/*.json ──(start)──▶ Postgre
 | Part | |
 |---|---|
 | `apps/server` | NestJS 11, one folder per route (controller → service → repository → database), plus `ai/` (`AiService` and one class per provider). The search is `SEARCH_SQL` in `src/documents/documents.repository.ts`; the cleaning of Hebrew is the SQL functions of `src/database/schema.sql`. See [apps/server/README.md](apps/server/README.md) |
-| `apps/web` | React 19, Vite, React Query, React Router, CSS Modules over design tokens (light and dark), Heebo font, laid out in the order of the official site ([docs/ui.md](docs/ui.md)). Vitest, Testing Library and Playwright |
+| `apps/web` | React 19, Vite, **TanStack Query as the one cache of the API's answers** (see below), React Router, CSS Modules over design tokens (light and dark), Heebo font, laid out in the order of the official site ([docs/ui.md](docs/ui.md)). Vitest, Testing Library and Playwright |
 | `packages/contracts` | The types of the API answers, shared by the two apps |
 | `.github/workflows/` | `ci.yml`: checks, end-to-end tests, deploy, checks of the live site. `refresh-data.yml`: the daily reading of the site |
+
+**The web app calls the API through a cache (TanStack Query), the recommended way, not with hand-made `useState` and `useEffect`.** Every answer is cached under its key (the filters of a search, the number of a document): going back to a search or a document already seen shows it at once, with no request. An answer stays fresh for 5 minutes and the chapters for the whole visit; identical requests are merged into one, an old request is cancelled when the person keeps typing (on top of a 250 ms pause), and the previous list stays on screen until the next one arrives (`keepPreviousData`, no flash of an empty page). A failing server is tried twice more, a refusal (4xx) is not; the loading, error and "try again" states come from the same place.
 
 **PostgreSQL itself runs inside the server** ([PGlite](https://pglite.dev), with the pgvector extension): the same SQL as a PostgreSQL server, with nothing to install. A shared server would change the connection, not the queries.
 
