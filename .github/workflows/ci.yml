@@ -125,5 +125,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          # No install here, and no pnpm: the script only needs Node.
+          package-manager-cache: false
       - name: Smoke tests on the live API and web app
         run: node scripts/smoke-test.mjs
