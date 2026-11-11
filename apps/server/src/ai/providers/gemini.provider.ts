@@ -26,7 +26,7 @@ export class GeminiProvider implements AiProvider {
 
   /** At most 100 texts per call (Gemini's limit). Fails if the answer is not one vector of the right size per text. */
   async embed({ texts, task }: EmbedRequest): Promise<number[][]> {
-    const response: Response = await this.post({
+    const response = await this.post({
       requests: texts.map((text: string) => ({
         model: `models/${MODEL}`,
         content: { parts: [{ text }] },
@@ -41,9 +41,10 @@ export class GeminiProvider implements AiProvider {
     return vectors;
   }
 
-  private async post(body: object): Promise<Response> {
+  /** Posts to Gemini and waits and asks again on the passing errors. The type of the answer is the one of `fetch` itself. */
+  private async post(body: object) {
     for (let attempt = 0; ; attempt++) {
-      const response: Response = await fetch(URL, {
+      const response = await fetch(URL, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY as string },
         body: JSON.stringify(body),
