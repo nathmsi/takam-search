@@ -29,17 +29,18 @@ interface BestMatchRequest {
   readonly list: DocumentListDto | undefined;
   /** The list is the answer to the words now in the address, not the previous list kept on screen while the next one loads. */
   readonly isCurrent: boolean;
-  readonly hasWords: boolean;
+  /** Words are typed or a chapter is chosen: the list was narrowed down, so its first document is worth opening. */
+  readonly isNarrowed: boolean;
   readonly isWide: boolean;
 }
 
 /**
- * The document to open by itself after a search: the best match (the server ranks them), when the screen shows the list and
- * the document side by side. On a phone opening a document hides the list, so nothing opens by itself there.
+ * The document to open by itself after a search or a choice of chapter: the first of the list (the best match when there are
+ * words: the server ranks them), when the screen shows the list and the document side by side. On a phone opening a document hides the list, so nothing opens by itself there.
  * `undefined` = leave things as they are.
  */
-function pickBestMatch({ list, isCurrent, hasWords, isWide }: BestMatchRequest): string | undefined {
-  if (!hasWords || !isWide || !isCurrent || list === undefined) return undefined;
+function pickBestMatch({ list, isCurrent, isNarrowed, isWide }: BestMatchRequest): string | undefined {
+  if (!isNarrowed || !isWide || !isCurrent || list === undefined) return undefined;
   return list.items[0]?.codeText;
 }
 
@@ -80,7 +81,7 @@ export function BrowsePage() {
   const chapters = useChapters();
   const selected = useDocument(codeText);
   const isWide: boolean = useIsWideScreen();
-  const bestMatch: string | undefined = pickBestMatch({ list: list.data, isCurrent: !list.isPlaceholderData, hasWords: q.trim() !== '', isWide });
+  const bestMatch: string | undefined = pickBestMatch({ list: list.data, isCurrent: !list.isPlaceholderData, isNarrowed: q.trim() !== '' || chapter !== '', isWide });
   const navigate = useNavigate();
   // A search opens its best match once. A document opened from the address (a shared link) or by a click stays: the key of the
   // search it was opened with is already handled.

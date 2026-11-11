@@ -57,6 +57,14 @@ test.describe('Browse: the list', () => {
     await expect(browse.items.first()).toHaveAttribute('aria-current', 'page');
   });
 
+  test('opens the first document of the chapter chosen from the home tiles, on a wide screen', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'on a phone nothing opens by itself');
+    await page.goto('/documents?chapter=10&type=all');
+
+    await expect(page.getByRole('region', { name: 'פרטי ההוראה' }).getByRole('heading', { level: 2 })).toContainText('הוראה מספר 10.');
+    await expect(page).toHaveURL(/\/documents\/H\.10\./);
+  });
+
   test('a new search replaces the document that is open by its best match, on a wide screen', async ({ page, isMobile }) => {
     test.skip(isMobile, 'on a phone nothing opens by itself');
     const browse = new BrowsePage(page);

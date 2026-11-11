@@ -330,7 +330,17 @@ describe('BrowsePage, the best match opens by itself', () => {
     expect(screen.getByText('בחרו הוראה מהרשימה כדי לראות את פרטיה.')).toBeInTheDocument();
   });
 
-  it('opens nothing without words (the tree), nor when nothing was found', async () => {
+  it('opens the first document of a chapter chosen (the tiles of the home page)', async () => {
+    screenIs(true);
+    installFakeApi({ documents: ALL });
+
+    renderApp('/documents?chapter=1.4');
+
+    const detail = await screen.findByRole('region', { name: 'פרטי ההוראה' });
+    expect(await within(detail).findByRole('heading', { level: 2, name: /מועדי תשלום/ })).toBeInTheDocument();
+  });
+
+  it('opens nothing without words or chapter (the whole tree), nor when nothing was found', async () => {
     screenIs(true);
     installFakeApi({ documents: ALL });
 
