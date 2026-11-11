@@ -94,3 +94,40 @@
   background: var(--color-surface-muted);
   color: var(--color-text);
 }
+
+.withToggle {
+  padding-inline-end: calc(2 * var(--touch-target));
+}
+
+.toggle {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  display: grid;
+  place-items: center;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease);
+}
+
+.toggle:hover,
+.toggle:focus-visible {
+  opacity: 1;
+}
+
+.beforeClear {
+  inset-inline-end: calc(var(--touch-target) + var(--space-2));
+}
+
+.on {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  opacity: 1;
+}

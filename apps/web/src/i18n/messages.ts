@@ -39,7 +39,6 @@ export const messages = {
   clearSearch: 'ניקוי החיפוש',
   clearAll: 'נקה חיפוש',
   filterMeaning: 'חיפוש לפי משמעות (ניסיוני)',
-  filterMeaningHint: 'מבין גם שאלות במילים אחרות. כרגע רק בפרק 1.',
   documentTypes: {
     Instruction: 'הוראה',
     'Temporary Instruction': 'הוראה זמנית',

@@ -292,11 +292,11 @@ test.describe('Browse: the selected document', () => {
         });
       });
       await browse.goto('/documents?q=מקדמות');
-      await expect(browse.meaning).not.toBeChecked();
+      await expect(browse.meaning).toHaveAttribute('aria-pressed', 'false');
 
       await browse.meaning.click();
 
-      await expect(browse.meaning).toBeChecked();
+      await expect(browse.meaning).toHaveAttribute('aria-pressed', 'true');
       await expect(page).toHaveURL(/meaning=yes/);
       await expect(page.getByRole('status')).toContainText('לפי משמעות');
       await expect(browse.items).toHaveText([/מקדמות/]);
@@ -311,10 +311,10 @@ test.describe('Browse: the selected document', () => {
 
         await page.goto('/documents?q=מקדמות&meaning=yes');
 
-        await expect(browse.meaning).toBeChecked();
+        await expect(browse.meaning).toHaveAttribute('aria-pressed', 'true');
         await expect(page.getByText('לא הצלחנו לטעון את ההוראות')).toBeVisible();
         await browse.meaning.click();
-        await expect(browse.meaning).not.toBeChecked();
+        await expect(browse.meaning).toHaveAttribute('aria-pressed', 'false');
         await expect(browse.total).toHaveText(/^סה"כ \d+ הוראות$/);
         await expect(page).not.toHaveURL(/meaning/);
       });
