@@ -4,6 +4,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { Injectable, Logger } from '@nestjs/common';
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { loadData } from './load-data';
+import { readPgliteFiles } from './read-pglite-files';
 
 /**
  * The local database: PostgreSQL itself, running inside the server (PGlite), so nothing has to be installed.
@@ -17,7 +18,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private database!: PGlite;
 
   async onModuleInit(): Promise<void> {
-    this.database = await PGlite.create(process.env.DATABASE_DIR ?? join(__dirname, '..', '..', '.pgdata'));
+    this.database = await PGlite.create({ dataDir: process.env.DATABASE_DIR ?? join(__dirname, '..', '..', '.pgdata'), ...(await readPgliteFiles()) });
     await this.database.exec(readFileSync(join(__dirname, 'schema.sql'), 'utf8'));
     const [{ count }] = await this.query<{ count: number }>('SELECT count(*)::int AS count FROM documents');
     if (count > 0) return;

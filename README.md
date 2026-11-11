@@ -74,6 +74,15 @@ Document.json + Chapter.json ──(first start)──▶ PostgreSQL (PGlite) �
 
 More: [docs/README.md](docs/README.md) is the map ([architecture](docs/architecture.md), [data](docs/data.md), [API](docs/api.md), [interface](docs/ui.md), [site audit](docs/site-audit.md), [testing](docs/testing.md)). [CLAUDE.md](CLAUDE.md) holds the rules for whoever changes the code.
 
+## Deployed (Vercel)
+
+- Web: https://takam-search.vercel.app
+- API: https://takam-search-api.vercel.app (try `/health`, `/v1/documents?q=קופות ביטחון`)
+
+Two Vercel projects, one per app. Settings live on Vercel, set with the CLI: the API has `CORS_ORIGINS` (the address of the web app), the web app has `VITE_API_URL` (the address of the API) and a rewrite of every path to `index.html` (`apps/web/vercel.json`).
+The database is built in memory on every cold start of the API (about 8 to 10 seconds for the first request, then fast). PGlite's binary files are read in `read-pglite-files.ts` with plain paths so that Vercel includes them.
+The API is deployed from the repository root, with `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` set, using `vercel build --prod` then `vercel deploy --prebuilt --prod`.
+
 ## Limits you should know
 
 - The search reads titles, descriptions, keywords and numbers, **not the text of the instructions**, and it has no notion of meaning: a synonym is not a match.
