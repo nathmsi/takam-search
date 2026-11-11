@@ -1,5 +1,5 @@
 /**
- * `GEMINI_API_KEY=... pnpm data:embed [--chapter 1] [--force]`: turns the documents of one main chapter (default: 1) into
+ * `pnpm data:embed [--chapter 1 | --all] [--force]`: turns the documents of one main chapter (default: 1), or every document (`--all`), into
  * embeddings with Gemini and writes them in `data/embeddings.json`, which the server loads into the column `documents.embedding` (pgvector).
  *
  * It reads only the fields of the site's own objects: title, description, keywords. Documents already in the file are
@@ -41,18 +41,32 @@ function readExisting(force: boolean): EmbeddingsFile {
   return file.model === provider.embeddingModel && file.dimensions === EMBEDDING_DIMENSIONS ? file : empty;
 }
 
+/** Gemini limits the requests per minute: when it says so (429), wait and ask again instead of stopping half way. */
+async function embedWithPatience(texts: string[]): Promise<number[][]> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await provider.embed({ texts, task: 'document' });
+    } catch (error) {
+      if (attempt >= 5 || !String(error).includes('429')) throw error;
+      console.log('  Gemini asks to slow down: waiting 30 seconds');
+      await new Promise((resolve) => setTimeout(resolve, 30_000));
+    }
+  }
+}
+
 async function main(): Promise<void> {
   if (!provider.isConfigured()) throw new Error('Set GEMINI_API_KEY in the shell: GEMINI_API_KEY=... pnpm data:embed');
   const chapterIndex: number = process.argv.indexOf('--chapter');
   const chapter = Number(chapterIndex === -1 ? 1 : process.argv[chapterIndex + 1]);
+  const everything: boolean = process.argv.includes('--all');
   const file: EmbeddingsFile = readExisting(process.argv.includes('--force'));
   const documents: SiteDocument[] = (JSON.parse(readFileSync(join(__dirname, '..', 'data', 'Document.json'), 'utf8')) as SiteDocument[]).filter(
-    (document) => document.documentcodetext && document.mainchaptercode === chapter && !(document.documentcodetext in file.vectors) && textOf(document) !== '',
+    (document) => document.documentcodetext && (everything || document.mainchaptercode === chapter) && !(document.documentcodetext in file.vectors) && textOf(document) !== '',
   );
-  console.log(`Chapter ${chapter}: ${documents.length} documents to embed (${Object.keys(file.vectors).length} already done).`);
+  console.log(`${everything ? 'All chapters' : `Chapter ${chapter}`}: ${documents.length} documents to embed (${Object.keys(file.vectors).length} already done).`);
   for (let start = 0; start < documents.length; start += BATCH_SIZE) {
     const batch: SiteDocument[] = documents.slice(start, start + BATCH_SIZE);
-    const vectors: number[][] = await provider.embed({ texts: batch.map(textOf), task: 'document' });
+    const vectors: number[][] = await embedWithPatience(batch.map(textOf));
     batch.forEach((document, index) => (file.vectors[document.documentcodetext as string] = vectors[index]));
     writeFileSync(DATA_FILE, JSON.stringify(file));
     console.log(`  ${Math.min(start + BATCH_SIZE, documents.length)} / ${documents.length}`);

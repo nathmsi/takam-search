@@ -26,9 +26,9 @@ When the server starts, `src/database/database.service.ts` opens its database, r
 
 ## Embeddings (experiment)
 
-`pnpm data:embed` with `GEMINI_API_KEY` in `apps/server/.env` (in `apps/server`, `scripts/embed-documents.ts`) reads `Document.json`, keeps the documents of one main chapter (`--chapter 1`, default 1), and asks Gemini (`gemini-embedding-001`, 768 numbers, task "document") for the embedding of **title + description + keywords** only: the fields of the site's own objects, not the Word files. It writes `data/embeddings.json` (`{ model, dimensions, vectors: { "H.1.2.1": [...] } }`), skips what is already there (`--force` redoes it) and never writes the key. When the database is built, the loader copies each vector into `documents.embedding`. No file = no embeddings, and the search by words is unchanged. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
+`pnpm data:embed` with `GEMINI_API_KEY` in `apps/server/.env` (in `apps/server`, `scripts/embed-documents.ts`) reads `Document.json`, keeps the documents of one main chapter (`--chapter 1`, default 1) or all of them (`--all`: the 922, about 18 requests, a few minutes because Gemini limits the requests per minute and the script waits 30 seconds when told to), and asks Gemini (`gemini-embedding-001`, 768 numbers, task "document") for the embedding of **title + description + keywords** only: the fields of the site's own objects, not the Word files. It writes `data/embeddings.json` (`{ model, dimensions, vectors: { "H.1.2.1": [...] } }`), skips what is already there (`--force` redoes it) and never writes the key. When the database is built, the loader copies each vector into `documents.embedding`. No file = no embeddings, and the search by words is unchanged. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
 
-After `pnpm data:embed`: `pnpm db:reset`, restart the server, tick "search by meaning" or add `meaning=yes`.
+After `pnpm data:embed`: `pnpm db:reset`, restart the server, turn on the sparkle button of the header or add `meaning=yes`. `data/embeddings.json` is about 9 MB (the 922 vectors); the loader copies them with one SQL query, so the start-up stays fast.
 
 ## The tables (`schema.sql`)
 
@@ -52,7 +52,7 @@ After `pnpm data:embed`: `pnpm db:reset`, restart the server, tick "search by me
 | `version`, `valid_from`, `valid_to` | the version, and the dates: an empty end date means no end |
 | `chapter_code` | its sub-chapter (`1.2`) |
 | `parent_id` | a form, a message or a temporary instruction belongs to an instruction |
-| `embedding` | **pgvector** `vector(768)`: the meaning of the document as 768 numbers (Gemini), or `NULL` when it was not embedded (experiment: chapter 1 only) |
+| `embedding` | **pgvector** `vector(768)`: the meaning of the document as 768 numbers (Gemini), or `NULL` when it was not embedded (today all 922 are) |
 | `title_n`, `keywords_n`, `description_n`, `code_n` | the same texts cleaned by `normalize_he()`, kept up to date by the database itself: **these are what the search reads** |
 
 ## What the loader decides

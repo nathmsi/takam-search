@@ -45,9 +45,9 @@ describe('DocumentsService', () => {
     ai.embedQuestion.mockResolvedValue(Array.from({ length: 768 }, (_, position) => (position === 0 ? 1 : 0)));
     await database.query("UPDATE documents SET embedding = $1::vector WHERE code_text = 'H.1.4.5'", [`[${[1, ...Array(767).fill(0)].join(',')}]`]);
 
-    const page = await service.list({ q: 'מישהו לא שילם בזמן', meaning: 'yes' });
+    const page = await service.list({ q: 'qqqq zzzz', meaning: 'yes' });
 
-    expect(ai.embedQuestion).toHaveBeenCalledWith('מישהו לא שילם בזמן');
+    expect(ai.embedQuestion).toHaveBeenCalledWith('qqqq zzzz');
     expect(page).toMatchObject({ meaning: true, relaxed: false });
     expect(page.items.map((item) => item.codeText)).toEqual(['H.1.4.5']);
   });

@@ -105,14 +105,19 @@ const SEARCH_SQL = `
   LIMIT $7::int OFFSET $8::int
 `;
 
-/** Below this cosine similarity (0 to 1) a document is not "close in meaning" to the question, unless it also has a word of it. */
+/** Below this cosine similarity (0 to 1) a document is never "close in meaning" to the question. */
 const MIN_SIMILARITY = 0.6;
+/**
+ * A document is "close in meaning" when it is within this distance of the best one. Measured on the real data: the best
+ * document of a question scores 0.70 to 0.81, and a fixed bar of 0.6 let 85 to 500 of the 922 documents through.
+ */
+const CLOSENESS_WINDOW = 0.06;
 
 /**
  * THE SEARCH BY MEANING (experiment: only the documents whose `embedding` is filled, see docs/data.md).
  * Same filters as above ($1 to $5). $6 limit, $7 offset, $8 the embedding of the question.
  * `similarity` = 1 - the cosine distance between the question and the document (pgvector `<=>`). A document stays if it is
- * close enough in meaning or has at least one of the typed words; the order is the similarity plus a small bonus for the
+ * close in meaning (at least MIN_SIMILARITY and within CLOSENESS_WINDOW of the best document) or has at least one of the typed words; the order is the similarity plus a small bonus for the
  * words (the same score as the search above), so a document that says the words AND means the same comes first.
  */
 const MEANING_SQL = `
@@ -122,7 +127,8 @@ const MEANING_SQL = `
   CROSS JOIN LATERAL (SELECT 1 - (d.embedding <=> $8::vector) AS similarity) AS meaning
   WHERE ${FILTERS}
     AND d.embedding IS NOT NULL
-    AND (meaning.similarity >= ${MIN_SIMILARITY} OR hits.found >= 1)
+    AND (meaning.similarity >= GREATEST(${MIN_SIMILARITY}, (SELECT max(1 - (best.embedding <=> $8::vector)) FROM documents best) - ${CLOSENESS_WINDOW})
+         OR hits.found >= 1)
   ORDER BY meaning.similarity + hits.score * 0.02 DESC, natural_key(d.code) NULLS LAST, d.id
   LIMIT $6::int OFFSET $7::int
 `;

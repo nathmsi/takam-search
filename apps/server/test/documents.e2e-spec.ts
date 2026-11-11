@@ -116,7 +116,7 @@ describe('Documents by meaning (e2e)', () => {
   });
 
   it('GET /v1/documents?q=&meaning=yes gives the documents close in meaning, and says so', async () => {
-    const { status, body } = await get({ q: 'מישהו לא שילם בזמן', meaning: 'yes' });
+    const { status, body } = await get({ q: 'qqqq zzzz', meaning: 'yes' });
 
     const list = body as DocumentListDto;
     expect(status).toBe(200);

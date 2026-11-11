@@ -21,7 +21,7 @@ src/
 data/                      the two objects of the Takam site
 scripts/query.ts           pnpm db:query "SELECT ..."
 scripts/refresh-data.ts    pnpm data:refresh (read the site again, replace data/)
-scripts/embed-documents.ts GEMINI_API_KEY=... pnpm data:embed (embeddings of chapter 1 -> data/embeddings.json)
+scripts/embed-documents.ts GEMINI_API_KEY=... pnpm data:embed (embeddings of one chapter or --all -> data/embeddings.json)
 test/                      end-to-end tests, one file per route
 ```
 

@@ -85,7 +85,7 @@ The API is deployed from the repository root, with `VERCEL_ORG_ID` and `VERCEL_P
 
 ## Limits you should know
 
-- The search reads titles, descriptions, keywords and numbers, **not the text of the instructions**, and the search by words has no notion of meaning (a synonym is not a match). An experiment, "search by meaning" (pgvector + Gemini embeddings of the title, description and keywords, chapter 1 only), covers that.
+- The search reads titles, descriptions, keywords and numbers, **not the text of the instructions**, and the search by words has no notion of meaning (a synonym is not a match). An experiment, "search by meaning" (pgvector + Gemini embeddings of the title, description and keywords of all 922 documents), covers that.
 - The Hebrew rules (endings and prefixes) are simple rules, not a dictionary: they are right most of the time and sometimes wrong, in the same way on both sides of the comparison. They are tested on word pairs, not measured on real questions.
 - 7 of the 11 instructions that the site does not show in its tree say in their description that they were merged or renumbered, so the site probably hides them on purpose; here they are kept and their description tells where they went. They count as "in force" because the data gives them no end date.
 - The data is two committed files, read again from the site every day by a workflow (`pnpm data:refresh`); between two readings it is up to a day old. The interface is Hebrew only.

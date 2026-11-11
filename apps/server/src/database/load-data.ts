@@ -147,7 +147,9 @@ function chapterOf(document: SiteDocument, index: ChapterIndex): string | null {
 async function insertEmbeddings(transaction: Transaction): Promise<void> {
   if (!existsSync(join(DATA_DIRECTORY, 'embeddings.json'))) return;
   const { vectors } = readJson<{ vectors: Record<string, number[]> }>('embeddings.json');
-  for (const [codeText, embedding] of Object.entries(vectors)) {
-    await transaction.query('UPDATE documents SET embedding = $2::vector WHERE code_text = $1', [codeText, `[${embedding.join(',')}]`]);
-  }
+  const codeTexts: string[] = Object.keys(vectors);
+  await transaction.query('UPDATE documents d SET embedding = v.embedding::vector FROM unnest($1::text[], $2::text[]) AS v(code_text, embedding) WHERE d.code_text = v.code_text', [
+    codeTexts,
+    codeTexts.map((codeText) => `[${vectors[codeText].join(',')}]`),
+  ]);
 }
