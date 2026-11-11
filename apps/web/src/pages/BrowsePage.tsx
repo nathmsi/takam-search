@@ -1,6 +1,6 @@
 import type { DocumentListDto } from '@takam/contracts';
-import { useEffect, useState } from 'react';
-import { Link, Navigate, useParams, useSearchParams } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { DocumentPanel } from '../components/DocumentPanel/DocumentPanel';
 import { FilterBar } from '../components/FilterBar/FilterBar';
 import { Icon } from '../components/Icon/Icon';
@@ -31,18 +31,15 @@ interface BestMatchRequest {
   readonly isCurrent: boolean;
   readonly hasWords: boolean;
   readonly isWide: boolean;
-  /** The document open now, if any. */
-  readonly selected: string | undefined;
 }
 
 /**
  * The document to open by itself after a search: the best match (the server ranks them), when the screen shows the list and
- * the document side by side and the document open is not one of the results. On a phone opening a document hides the list,
- * so nothing opens by itself there. `undefined` = leave things as they are.
+ * the document side by side. On a phone opening a document hides the list, so nothing opens by itself there.
+ * `undefined` = leave things as they are.
  */
-function pickBestMatch({ list, isCurrent, hasWords, isWide, selected }: BestMatchRequest): string | undefined {
+function pickBestMatch({ list, isCurrent, hasWords, isWide }: BestMatchRequest): string | undefined {
   if (!hasWords || !isWide || !isCurrent || list === undefined) return undefined;
-  if (list.items.some((item) => item.codeText === selected)) return undefined;
   return list.items[0]?.codeText;
 }
 
@@ -83,7 +80,17 @@ export function BrowsePage() {
   const chapters = useChapters();
   const selected = useDocument(codeText);
   const isWide: boolean = useIsWideScreen();
-  const bestMatch: string | undefined = pickBestMatch({ list: list.data, isCurrent: !list.isPlaceholderData, hasWords: q.trim() !== '', isWide, selected: codeText });
+  const bestMatch: string | undefined = pickBestMatch({ list: list.data, isCurrent: !list.isPlaceholderData, hasWords: q.trim() !== '', isWide });
+  const navigate = useNavigate();
+  // A search opens its best match once. A document opened from the address (a shared link) or by a click stays: the key of the
+  // search it was opened with is already handled.
+  const searchKey = `${q}|${chapter}|${type}|${inForce}|${meaning}`;
+  const handledSearch = useRef<string>(codeText === undefined ? '' : searchKey);
+  useEffect(() => {
+    if (bestMatch === undefined || handledSearch.current === searchKey) return;
+    handledSearch.current = searchKey;
+    navigate({ pathname: `/documents/${bestMatch}`, search }, { replace: true });
+  }, [bestMatch, searchKey, search, navigate]);
   useDocumentTitle(selected.data ? `${selected.data.code ?? selected.data.codeText} ${selected.data.title}` : messages.browseTitle);
 
   const changeParam = (name: 'chapter' | 'type' | 'inForce' | 'meaning', value: string, defaultValue: string): void => {
@@ -104,7 +111,6 @@ export function BrowsePage() {
 
   return (
     <main id="main" tabIndex={-1} className={styles.page}>
-      {bestMatch === undefined ? null : <Navigate replace to={{ pathname: `/documents/${bestMatch}`, search }} />}
       <h1 className={styles.srOnly}>{messages.browseTitle}</h1>
       <FilterBar
         text={draft}

@@ -297,7 +297,7 @@ describe('BrowsePage, the best match opens by itself', () => {
     expect(await within(detail).findByRole('heading', { level: 2, name: /מועדי תשלום/ })).toBeInTheDocument();
   });
 
-  it('keeps the document that is open when it is one of the results', async () => {
+  it('keeps a document opened from the address (a shared link), even if it is not the best match', async () => {
     screenIs(true);
     const second = { ...payments, id: 9, codeText: 'H.1.4.9', title: 'תשלום נוסף' };
     installFakeApi({ documents: [...ALL, second] });
@@ -306,6 +306,18 @@ describe('BrowsePage, the best match opens by itself', () => {
 
     const detail = await screen.findByRole('region', { name: 'פרטי ההוראה' });
     expect(await within(detail).findByRole('heading', { level: 2, name: /תשלום נוסף/ })).toBeInTheDocument();
+  });
+
+  it('opens the best match of a new search even when another document is already open', async () => {
+    screenIs(true);
+    installFakeApi({ documents: ALL });
+    const { user } = renderApp('/documents/H.1.6.4');
+    const detail = await screen.findByRole('region', { name: 'פרטי ההוראה' });
+    expect(await within(detail).findByRole('heading', { level: 2, name: /תשלומים במטבע חוץ/ })).toBeInTheDocument();
+
+    await user.type(screen.getByRole('searchbox', { name: 'טקסט חופשי' }), 'תשלום');
+
+    expect(await within(detail).findByRole('heading', { level: 2, name: /מועדי תשלום/ })).toBeInTheDocument();
   });
 
   it('opens nothing by itself on a narrow screen, where opening a document would hide the list', async () => {

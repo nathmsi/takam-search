@@ -57,6 +57,18 @@ test.describe('Browse: the list', () => {
     await expect(browse.items.first()).toHaveAttribute('aria-current', 'page');
   });
 
+  test('a new search replaces the document that is open by its best match, on a wide screen', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'on a phone nothing opens by itself');
+    const browse = new BrowsePage(page);
+    await browse.gotoDocument('H.1.2.1');
+    await expect(browse.detailTitle).toContainText('ביצוע תקציב המדינה');
+
+    await browse.search('עיקול');
+
+    await expect(browse.detailTitle).toContainText('עיקול, המחאות זכות');
+    await expect(page).toHaveURL(/\/documents\/H\.1\.6\.6\?q=/);
+  });
+
   test('finds the same documents for the singular and the plural (the Takam site finds 2 and 4)', async ({ page }) => {
     const browse = new BrowsePage(page);
     await browse.goto();
