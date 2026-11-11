@@ -6,7 +6,8 @@ Base address in development: `http://localhost:3100` (set `PORT`). Everything is
 |---|---|
 | `GET /health` | `HealthDto`: the server is up, and how many rows the database holds. Outside the `/v1` prefix |
 | `GET /v1/documents` | `DocumentListDto` `{ total, items: DocumentDto[], relaxed, meaning }` |
-| `GET /v1/documents/:codeText` | One `DocumentDto`, by its number (`H.1.2.1`) |
+| `GET /v1/documents/:codeText/file` | `302` to the download of the Word file on the Takam site (`/api/DocumentSF/DownloadDocument/<file id>/x`). The server asks the site for the last published version of the document at the click; nothing is stored. `404` (JSON) for an unknown number or a document the site has no file for, `503` when the site cannot be reached |
+| `GET /v1/documents/:codeText` | One `DocumentDetailDto`, by its number (`H.1.2.1`): the `DocumentDto` and `related`, the documents attached to it (its messages, forms, temporary instructions...), oldest first |
 | `GET /v1/chapters` | `ChapterDto[]`: the chapters and sub-chapters with their number of documents |
 
 ## `GET /v1/documents` parameters
@@ -53,6 +54,7 @@ No result is **not** an error: `GET /v1/documents?q=zzzz` answers `200` with `{ 
 | `PORT` | `3100` | Port of the API |
 | `CORS_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Allowed browser origins, comma separated |
 | `GEMINI_API_KEY` | none | **Secret.** In development put it in `apps/server/.env` (ignored by git; `pnpm dev` and `pnpm data:embed` read it). The key of the search by meaning (and of `pnpm data:embed`). Not set: that search answers 503 |
+| `TAKAM_API_URL` | `https://takam.mof.gov.il/api` | The API of the Takam site, asked for the file of a document (and by `pnpm data:refresh`) |
 | `AI_PROVIDER` | the first provider that has a key | Forces a provider (`gemini`) |
 | `DATABASE_DIR` | `apps/server/.pgdata` | Where the database lives; `memory://` keeps it in memory (the tests do) |
 

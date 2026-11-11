@@ -20,6 +20,7 @@ export function makeDocument(overrides: Partial<DocumentDto> = {}): DocumentDto 
     mainChapterCode: '1',
     mainChapterTitle: 'ביצוע תקציב',
     officialPageUrl: `https://takam.mof.gov.il/document/${codeText}`,
+    fileUrl: `/v1/documents/${codeText}/file`,
     ...overrides,
   };
 }

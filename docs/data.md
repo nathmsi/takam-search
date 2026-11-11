@@ -24,6 +24,10 @@ When the server starts, `src/database/database.service.ts` opens its database, r
 - **Every day at 04:00 UTC** the GitHub workflow `.github/workflows/refresh-data.yml` runs it (and on demand from the Actions tab). When the files changed it runs the server tests, commits `chore(data): read the Takam site again` to `main`, and redeploys the API on Vercel. That last step runs only if the repository has a `VERCEL_TOKEN` secret (the project and team ids are repository variables).
 - The API keeps the data it loaded at start: on Vercel the database is rebuilt in memory at every cold start, so a redeploy is what brings the new data; locally, restart the server after `pnpm db:reset`.
 
+## The file of a document (Word)
+
+The Word files are **not stored** (the project searches the metadata only). The document panel has a link "הורדת קובץ ההוראה" to `GET /v1/documents/:codeText/file`; at the click the server asks the site `GET /api/DocumentVersion/<site_id>` (all the versions of the document), takes the file of the last published, not archived version, and answers `302` to `/api/DocumentSF/DownloadDocument/<file id>/x` on the site, which sends the file (`TakamSiteClient`). The site refuses a request without a `User-Agent`; the client sends `takam-search`. `TAKAM_API_URL` changes the address of the site's API (default `https://takam.mof.gov.il/api`). The file id is checked (15 to 18 letters and digits) before it goes in the address.
+
 ## Embeddings (experiment)
 
 `pnpm data:embed` with `GEMINI_API_KEY` in `apps/server/.env` (in `apps/server`, `scripts/embed-documents.ts`) reads `Document.json`, keeps the documents of one main chapter (`--chapter 1`, default 1) or all of them (`--all`: the 922, about 18 requests, a few minutes because Gemini limits the requests per minute and the script waits 30 seconds when told to), and asks Gemini (`gemini-embedding-001`, 768 numbers, task "document") for the embedding of **title + description + keywords** only: the fields of the site's own objects, not the Word files. It writes `data/embeddings.json` (`{ model, dimensions, vectors: { "H.1.2.1": [...] } }`), skips what is already there (`--force` redoes it) and never writes the key. When the database is built, the loader copies each vector into `documents.embedding`. No file = no embeddings, and the search by words is unchanged. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
@@ -45,6 +49,7 @@ After `pnpm data:embed`: `pnpm db:reset`, restart the server, turn on the sparkl
 | Column | |
 |---|---|
 | `id` | the id of the document on the site |
+| `site_id` | the id of the document in the site's own system (`sfid`): the server asks the site for the file with it, see below |
 | `code_text` | `H.1.2.1` (unique): also the end of the address of its page on the site |
 | `code` | `1.2.1` |
 | `title`, `description`, `keywords` | as the site writes them |

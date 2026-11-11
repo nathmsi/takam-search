@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS chapters (
 -- A document of the site: an instruction, a temporary instruction, a form, a message, a tender notice...
 CREATE TABLE IF NOT EXISTS documents (
   id           integer PRIMARY KEY,                 -- the id of the document on the Takam site
+  site_id      text NOT NULL,                       -- the id of the document in the site's own system: it is how the site is asked for the file
   code_text    text NOT NULL UNIQUE,                -- 'H.1.2.1': also the address of its page on the site
   code         text,                                -- '1.2.1'
   title        text NOT NULL,

@@ -1,9 +1,11 @@
-import type { ChapterDto, DocumentDto, DocumentListDto } from '@takam/contracts';
+import type { ChapterDto, DocumentDto, DocumentListDto, RelatedDocumentDto } from '@takam/contracts';
 import { vi } from 'vitest';
 import { CHAPTERS } from './fixtures';
 
 interface FakeApiOptions {
   readonly documents: readonly DocumentDto[];
+  /** What is attached to a document, by its number (default: nothing). */
+  readonly related?: Readonly<Record<string, readonly RelatedDocumentDto[]>>;
   readonly chapters?: readonly ChapterDto[];
   /** Answer every route with a 500. */
   readonly failing?: boolean;
@@ -20,7 +22,7 @@ interface FakeApi {
  * chapters), so the pages are tested end to end except for the network. The words work like the real ones in spirit:
  * every word must be in the title, the keywords or the description; if none has every word, any word will do (`relaxed`).
  */
-export function installFakeApi({ documents, chapters = CHAPTERS, failing = false }: FakeApiOptions): FakeApi {
+export function installFakeApi({ documents, related = {}, chapters = CHAPTERS, failing = false }: FakeApiOptions): FakeApi {
   const requests: string[] = [];
   let isFailing: boolean = failing;
 
@@ -37,7 +39,7 @@ export function installFakeApi({ documents, chapters = CHAPTERS, failing = false
       if (url.pathname === '/v1/documents') return reply(listFor(documents, url.searchParams));
       const codeText: string | undefined = /^\/v1\/documents\/(.+)$/.exec(url.pathname)?.[1];
       const found: DocumentDto | undefined = documents.find((document) => document.codeText === decodeURIComponent(codeText ?? ''));
-      return found ? reply(found) : reply({ statusCode: 404, error: 'Not Found', message: 'No such document' }, 404);
+      return found ? reply({ ...found, related: related[found.codeText] ?? [] }) : reply({ statusCode: 404, error: 'Not Found', message: 'No such document' }, 404);
     }),
   );
 

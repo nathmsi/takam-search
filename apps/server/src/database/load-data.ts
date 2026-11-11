@@ -112,10 +112,11 @@ async function insertDocuments(transaction: Transaction, documents: SiteDocument
   for (const document of documents) {
     const codeText = document.documentcodetext as string;
     await transaction.query(
-      `INSERT INTO documents (id, code_text, code, title, type, description, keywords, version, valid_from, valid_to, chapter_code, parent_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      `INSERT INTO documents (id, site_id, code_text, code, title, type, description, keywords, version, valid_from, valid_to, chapter_code, parent_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
         document.id,
+        document.sfid,
         codeText,
         codeText.replace(/^[A-Za-z]+\./, ''),
         clean(document.name),

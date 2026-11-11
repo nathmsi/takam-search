@@ -157,7 +157,7 @@ export function BrowsePage() {
               <StateMessage kind="error" title={messages.errorTitle} hint={messages.errorHint} action={{ label: messages.retry, onClick: () => void selected.refetch() }} />
             )
           ) : null}
-          {selected.data ? <DocumentPanel document={selected.data} /> : null}
+          {selected.data ? <DocumentPanel document={selected.data} search={search} /> : null}
         </section>
       </div>
     </main>

@@ -4,15 +4,17 @@ import type { DatabaseService } from '../database/database.service';
 import { DocumentsRepository } from './documents.repository';
 import type { AiService } from '../ai/ai.service';
 import { DocumentsService } from './documents.service';
+import type { TakamSiteClient } from './takam-site.client';
 
 describe('DocumentsService', () => {
   let database: DatabaseService;
   let service: DocumentsService;
+  const site = { findFileId: jest.fn() } as unknown as TakamSiteClient & { findFileId: jest.Mock };
   const ai = { embedQuestion: jest.fn() } as unknown as AiService & { embedQuestion: jest.Mock };
 
   beforeAll(async () => {
     database = await createTestDatabase();
-    service = new DocumentsService(new DocumentsRepository(database), ai);
+    service = new DocumentsService(new DocumentsRepository(database), ai, site);
   }, 60_000);
 
   afterAll(async () => {
@@ -84,5 +86,30 @@ describe('DocumentsService', () => {
 
   it('refuses a number that does not exist with a 404', async () => {
     await expect(service.get('H.99.9.9')).rejects.toThrow(NotFoundException);
+  });
+
+  describe('fileAddress', () => {
+    it('gives the download address of the site for the file of the document, asking the site with the id of the document', async () => {
+      site.findFileId.mockResolvedValue('0683X00000vtGzqQAE');
+
+      const address = await service.fileAddress('H.7.13.3');
+
+      expect(address).toBe('https://takam.mof.gov.il/api/DocumentSF/DownloadDocument/0683X00000vtGzqQAE/x');
+      expect(site.findFileId).toHaveBeenCalledWith('a0h3X00003hMm89QAC');
+    });
+
+    it('says 404 for a number that does not exist, without asking the site', async () => {
+      site.findFileId.mockClear();
+
+      await expect(service.fileAddress('H.99.9.9')).rejects.toBeInstanceOf(NotFoundException);
+      expect(site.findFileId).not.toHaveBeenCalled();
+    });
+
+    it('says 404 when the site has no file, and refuses an id that does not look like a file id', async () => {
+      site.findFileId.mockResolvedValueOnce(null).mockResolvedValueOnce('../../evil');
+
+      await expect(service.fileAddress('H.7.13.3')).rejects.toThrow('has no file');
+      await expect(service.fileAddress('H.7.13.3')).rejects.toThrow('has no file');
+    });
   });
 });

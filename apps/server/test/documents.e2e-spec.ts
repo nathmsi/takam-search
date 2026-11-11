@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import type { DocumentDto, DocumentListDto } from '@takam/contracts';
+import type { DocumentDetailDto, DocumentDto, DocumentListDto } from '@takam/contracts';
 import request from 'supertest';
 import { DatabaseService } from '../src/database/database.service';
 import { createTestApp } from './support/create-test-app';
@@ -107,7 +107,7 @@ describe('Documents by meaning (e2e)', () => {
   const axis0 = (): Promise<number[]> => Promise.resolve([1, ...Array(767).fill(0)]);
 
   beforeAll(async () => {
-    app = await createTestApp(axis0);
+    app = await createTestApp({ embedQuestion: axis0 });
     await app.get(DatabaseService).query("UPDATE documents SET embedding = $1::vector WHERE code_text = 'H.1.4.5'", [`[${(await axis0()).join(',')}]`]);
   }, 60_000);
 
@@ -130,5 +130,61 @@ describe('Documents by meaning (e2e)', () => {
 
   it('GET /v1/documents without meaning says meaning: false', async () => {
     expect(((await get({ q: 'מקדמות' })).body as DocumentListDto).meaning).toBe(false);
+  });
+});
+
+describe('Document with what is attached (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+  }, 60_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('GET /v1/documents/H.1.2.2 lists its five messages, and /H.1.2.1 has none', async () => {
+    const withMessages = (await request(app.getHttpServer()).get('/v1/documents/H.1.2.2')).body as DocumentDetailDto;
+    const without = (await request(app.getHttpServer()).get('/v1/documents/H.1.2.1')).body as DocumentDetailDto;
+
+    expect(withMessages.related).toHaveLength(5);
+    expect(withMessages.related.every((item) => item.type === 'Message')).toBe(true);
+    expect(without.related).toEqual([]);
+  });
+});
+
+describe('Document file (e2e)', () => {
+  let app: INestApplication;
+  const files: Record<string, string | null> = { a0h3X00003hMm89QAC: '0683X00000vtGzqQAE' };
+  const get = (path: string) => request(app.getHttpServer()).get(path).redirects(0);
+
+  beforeAll(async () => {
+    app = await createTestApp({ findFileId: (siteId) => (siteId in files ? Promise.resolve(files[siteId]) : Promise.resolve(null)) });
+  }, 60_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('GET /v1/documents/H.7.13.3 gives the path of its file', async () => {
+    const { body } = await get('/v1/documents/H.7.13.3');
+
+    expect((body as DocumentDto).fileUrl).toBe('/v1/documents/H.7.13.3/file');
+  });
+
+  it('GET /v1/documents/H.7.13.3/file sends the browser to the download of the site (302)', async () => {
+    const { status, headers } = await get('/v1/documents/H.7.13.3/file');
+
+    expect(status).toBe(302);
+    expect(headers.location).toBe('https://takam.mof.gov.il/api/DocumentSF/DownloadDocument/0683X00000vtGzqQAE/x');
+  });
+
+  it('says 404 in JSON for a document that does not exist, and for one the site has no file for', async () => {
+    const missing = await get('/v1/documents/H.99.9.9/file');
+    const noFile = await get('/v1/documents/H.1.2.1/file');
+
+    expect([missing.status, noFile.status]).toEqual([404, 404]);
+    expect(noFile.body).toMatchObject({ statusCode: 404 });
   });
 });

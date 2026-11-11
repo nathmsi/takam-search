@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { DocumentDto, InForceFilter } from '@takam/contracts';
+import type { DocumentDto, InForceFilter, RelatedDocumentDto } from '@takam/contracts';
 import { DatabaseService } from '../database/database.service';
 
 /** What a search is asked: the words typed, the filters, the page. */
@@ -48,7 +48,8 @@ const DOCUMENT_COLUMNS = `
   c.title AS "chapterTitle",
   m.code AS "mainChapterCode",
   m.title AS "mainChapterTitle",
-  'https://takam.mof.gov.il/document/' || d.code_text AS "officialPageUrl"
+  'https://takam.mof.gov.il/document/' || d.code_text AS "officialPageUrl",
+  '/v1/documents/' || d.code_text || '/file' AS "fileUrl"
 `;
 
 /** A document with its sub-chapter (c) and the chapter above it (m). */
@@ -133,6 +134,23 @@ const MEANING_SQL = `
   LIMIT $6::int OFFSET $7::int
 `;
 
+/** The documents attached to a document ($2): messages, forms, temporary instructions... Oldest first, like the site. $1 is today. */
+const FIND_RELATED_SQL = `
+  SELECT c.code_text AS "codeText",
+         c.title,
+         c.type,
+         c.valid_from::text AS "validFrom",
+         c.valid_to::text AS "validTo",
+         (coalesce(c.valid_from <= $1::date, true) AND coalesce(c.valid_to >= $1::date, true)) AS "isInForce",
+         '/v1/documents/' || c.code_text || '/file' AS "fileUrl"
+  FROM documents c
+  JOIN documents p ON p.id = c.parent_id
+  WHERE p.code_text = $2::text
+  ORDER BY c.valid_from NULLS LAST, natural_key(c.code_text), c.id
+`;
+
+const FIND_SITE_ID_SQL = `SELECT site_id AS "siteId" FROM documents WHERE code_text = $1::text`;
+
 const FIND_ONE_SQL = `SELECT ${DOCUMENT_COLUMNS} ${DOCUMENT_JOINS} WHERE d.code_text = $2::text`;
 
 /** Every SQL query on the documents is here. */
@@ -149,6 +167,17 @@ export class DocumentsRepository {
   async searchByMeaning({ today, words, chapter, type, inForce, limit, offset, embedding }: MeaningSearchRequest): Promise<SearchPage> {
     const rows = await this.database.query<DocumentDto & { total: number }>(MEANING_SQL, [today, words, chapter, type, inForce, limit, offset, `[${embedding.join(',')}]`]);
     return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _total, ...document }) => document) };
+  }
+
+  /** The documents attached to a document (its messages, forms...), oldest first. */
+  async findRelated(today: string, codeText: string): Promise<RelatedDocumentDto[]> {
+    return this.database.query<RelatedDocumentDto>(FIND_RELATED_SQL, [today, codeText]);
+  }
+
+  /** The id of a document in the site's own system, or `undefined` for a number that does not exist. */
+  async findSiteId(codeText: string): Promise<string | undefined> {
+    const rows = await this.database.query<{ siteId: string }>(FIND_SITE_ID_SQL, [codeText]);
+    return rows[0]?.siteId;
   }
 
   async findByCodeText(today: string, codeText: string): Promise<DocumentDto | undefined> {

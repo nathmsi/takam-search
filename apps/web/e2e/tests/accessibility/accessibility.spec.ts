@@ -32,6 +32,14 @@ for (const theme of ['light', 'dark'] as const) {
       expect(await violationsOf(page)).toEqual([]);
     });
 
+    test('an instruction with its attached messages has no detectable violation', async ({ page }) => {
+      const browse = new BrowsePage(page);
+      await browse.gotoDocument('H.1.2.2');
+      await expect(browse.detail.getByRole('region', { name: 'הודעות' })).toBeVisible();
+
+      expect(await violationsOf(page)).toEqual([]);
+    });
+
     test('the ranked results of a question have no detectable violation', async ({ page }) => {
       const browse = new BrowsePage(page);
       await browse.goto();

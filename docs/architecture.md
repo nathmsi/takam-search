@@ -12,7 +12,7 @@
 | `main.ts`, `app.module.ts` | Start-up, and the list of the four parts below |
 | `database/` | **The database.** `schema.sql` (tables and functions), `database.service.ts` (opens it, runs the schema, fills it if empty, `query()`), `load-data.ts` (the two JSON files → rows) |
 | `ai/` | **The AI side.** `ai.service.ts` (`AiService`: picks the provider, maps failures to 503, `embedQuestion`), `providers/ai-provider.interface.ts` (`AiProvider`), `providers/gemini.provider.ts` (Gemini over REST, with retries), `embedding-dimensions.ts` (768). Same shape as the AI module of `jobs-monitor-api` |
-| `documents/` | **The route `/v1/documents`.** `documents.controller.ts` (the route), `documents.service.ts` (defaults, and "no document has every word → show the closest"), `documents.repository.ts` (**the SQL**), `list-documents.query.ts` (the parameters allowed), `parse-code-text.pipe.ts` |
+| `documents/` | **The route `/v1/documents`.** `documents.controller.ts` (the route), `documents.service.ts` (defaults, and "no document has every word → show the closest"), `documents.repository.ts` (**the SQL**), `takam-site.client.ts` (asks the Takam site for the file of a document, at the click), `list-documents.query.ts` (the parameters allowed), `parse-code-text.pipe.ts` |
 | `chapters/` | **The route `/v1/chapters`.** `chapters.controller.ts`, `chapters.repository.ts` (SQL) |
 | `health/` | **The route `/health`** |
 | `errors/` | The one JSON body of every error |

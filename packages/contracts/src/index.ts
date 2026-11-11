@@ -54,6 +54,25 @@ export interface DocumentDto {
   mainChapterTitle: string | null;
   /** The page of the document on the Takam site. */
   officialPageUrl: string;
+  /** The path of the API that sends the person to the file of the document (`/v1/documents/H.1.2.1/file`). */
+  fileUrl: string;
+}
+
+/** A document attached to another one: a message, a form, a temporary instruction... (as the site lists them under an instruction). */
+export interface RelatedDocumentDto {
+  codeText: string;
+  title: string;
+  type: DocumentType;
+  validFrom: string | null;
+  validTo: string | null;
+  isInForce: boolean;
+  /** The path of the API that sends the person to its file. */
+  fileUrl: string;
+}
+
+/** The answer of `GET /v1/documents/:codeText`: the document and what is attached to it, oldest first. */
+export interface DocumentDetailDto extends DocumentDto {
+  related: RelatedDocumentDto[];
 }
 
 /** The answer of `GET /v1/documents`. */

@@ -223,6 +223,30 @@ test.describe('Browse: the selected document', () => {
     await expect(browse.detail).toContainText('הוראה זו אוחדה עם הוראה 7.1.1');
   });
 
+  test('lists the five messages attached to H.1.2.2, like the official site, and opens one', async ({ page }) => {
+    const browse = new BrowsePage(page);
+    await browse.gotoDocument('H.1.2.2');
+
+    const messages = browse.detail.getByRole('region', { name: 'הודעות' });
+    await expect(messages.getByRole('listitem')).toHaveCount(5);
+    await expect(messages.getByRole('listitem').first()).toContainText('הנחיות לביצוע התקציב בשנת 2020');
+    await expect(messages.getByRole('listitem').first()).toContainText('29 בספטמבר 2020');
+    await expect(messages.getByRole('link', { name: /הורדת הקובץ/ })).toHaveCount(5);
+
+    await messages.getByRole('link', { name: 'הנחיות לביצוע התקציב בשנת 2020', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/documents\/HOD\.1\.2\.2\.1/);
+    await expect(browse.detailTitle).toContainText('הנחיות לביצוע התקציב בשנת 2020');
+  });
+
+  test('links to the file of the instruction, through the API (the click is not made here: it would download)', async ({ page }) => {
+    const browse = new BrowsePage(page);
+
+    await browse.gotoDocument('H.1.2.1');
+
+    await expect(browse.detail.getByRole('link', { name: 'הורדת קובץ ההוראה' })).toHaveAttribute('href', /\/v1\/documents\/H\.1\.2\.1\/file$/);
+  });
+
   test('links to the official page, in a new tab', async ({ page }) => {
     const browse = new BrowsePage(page);
     await browse.gotoDocument('H.1.2.1');
@@ -295,7 +319,7 @@ test.describe('Browse: the selected document', () => {
             total: 1,
             relaxed: false,
             meaning: true,
-            items: [{ id: 1, codeText: 'H.1.4.5', code: '1.4.5', title: 'מקדמות', type: 'Instruction', description: null, keywords: [], version: 1, validFrom: null, validTo: null, isInForce: true, chapterCode: '1.4', chapterTitle: 'ביצוע תשלומים', mainChapterCode: '1', mainChapterTitle: 'ביצוע תקציב', officialPageUrl: 'https://takam.mof.gov.il/document/H.1.4.5' }],
+            items: [{ id: 1, codeText: 'H.1.4.5', code: '1.4.5', title: 'מקדמות', type: 'Instruction', description: null, keywords: [], version: 1, validFrom: null, validTo: null, isInForce: true, chapterCode: '1.4', chapterTitle: 'ביצוע תשלומים', mainChapterCode: '1', mainChapterTitle: 'ביצוע תקציב', officialPageUrl: 'https://takam.mof.gov.il/document/H.1.4.5', fileUrl: '/v1/documents/H.1.4.5/file' }],
           },
         });
       });

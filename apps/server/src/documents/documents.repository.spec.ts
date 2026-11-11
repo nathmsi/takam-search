@@ -182,6 +182,21 @@ describe('DocumentsRepository', () => {
     });
   });
 
+  describe('findRelated', () => {
+    it('gives the messages attached to an instruction, oldest first, like the site (H.1.2.2 has five)', async () => {
+      const related = await repository.findRelated('2026-11-11', 'H.1.2.2');
+
+      expect(related.map((item) => item.codeText)).toEqual(['HOD.1.2.2.1', 'HOD.1.2.2.2', 'HOD.1.2.2.3', 'HOD.1.2.2.4', 'HOD.1.2.2.5']);
+      expect(related[0]).toMatchObject({ type: 'Message', title: 'הנחיות לביצוע התקציב בשנת 2020', validFrom: '2020-09-29', validTo: '2020-12-31', isInForce: false, fileUrl: '/v1/documents/HOD.1.2.2.1/file' });
+      expect(related[4]).toMatchObject({ validFrom: '2026-03-01', validTo: null, isInForce: true });
+    });
+
+    it('gives nothing for a document that has nothing attached, or that does not exist', async () => {
+      expect(await repository.findRelated('2026-11-11', 'H.1.2.1')).toEqual([]);
+      expect(await repository.findRelated('2026-11-11', 'H.99.9.9')).toEqual([]);
+    });
+  });
+
   describe('findByCodeText', () => {
     it('gives a document with its chapters, its keywords as a list and the address of its page', async () => {
       const document = (await repository.findByCodeText('2026-11-11', 'H.1.2.1')) as DocumentDto;
