@@ -4,6 +4,7 @@ const shared = {
   rootDir: '.',
   transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json', diagnostics: { ignoreCodes: [151002] } }] },
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/test/support/set-test-environment.ts'],
 };
 
 module.exports = {

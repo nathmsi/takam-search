@@ -12,6 +12,7 @@
 
 ## What each level proves
 
+- **No test reaches the Takam site or the remote database.** `apps/server/test/support/set-test-environment.ts` (a Jest `setupFiles`) points every server test to `test/fixtures` (`TAKAM_DATA_DIR`), keeps the database in memory and unsets `DATABASE_URL`; the end-to-end tests of the web app set `TAKAM_DATA_DIR` in `playwright.config.ts`. This is checked by running the server tests with an unreachable site and a bogus `DATABASE_URL`.
 - **Server unit** (on the real PostgreSQL, in memory, filled with a saved copy of the site's data (`apps/server/test/fixtures`) in about a second):
   - the **SQL functions** (`schema.spec.ts`): singular and plural are the same word, quotes, vowel points, the first word like the others, the little words of a question, `ועד` is not in `מועד`, `1.2` before `1.10`;
   - the **loaded data** (`load-data.spec.ts`): 922 documents, 16 chapters, every instruction has a sub-chapter, chapter 10 recreated, a child takes the chapter of its parent;
