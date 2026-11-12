@@ -46,7 +46,7 @@
   <text x="84" y="502" font-size="16" fill="#5b21b6">on / off, off by default (?meaning=yes)</text>
 
   <!-- ============ VERCEL CONTAINER ============ -->
-  <rect x="490" y="130" width="940" height="480" rx="22" fill="#ffffff" fill-opacity="0.55" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
+  <rect x="490" y="130" width="940" height="262" rx="22" fill="#ffffff" fill-opacity="0.55" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
   <g>
     <rect x="514" y="112" width="132" height="36" rx="18" fill="#0f172a"/>
     <path d="M552 123l12 20h-24z" fill="#ffffff"/>
@@ -91,11 +91,11 @@
     <rect x="520" y="404" width="250" height="176" rx="16" fill="#ffffff" stroke="#d6dde8"/>
     <path d="M520 420a16 16 0 0 1 16-16h218a16 16 0 0 1 16 16v28H520z" fill="#b45309"/>
   </g>
-  <text x="540" y="433" font-size="21" font-weight="700" fill="#ffffff">pnpm db:push (by hand)</text>
+  <text x="540" y="433" font-size="21" font-weight="700" fill="#ffffff">pnpm db:push</text>
   <text x="540" y="474" font-size="17" fill="#334155">1. reads /Document, /Chapter</text>
   <text x="540" y="502" font-size="17" fill="#334155">2. checks the answer</text>
   <text x="540" y="530" font-size="17" fill="#334155">3. rebuilds the 2 tables</text>
-  <text x="540" y="558" font-size="15" fill="#64748b">the vectors already there stay</text>
+  <text x="540" y="558" font-size="15" fill="#64748b">by hand · vectors are kept</text>
 
   <!-- Database -->
   <g filter="url(#shadow)">
@@ -199,8 +199,8 @@
   <path d="M1400 330 L1430 330 L1430 400 L1488 400" fill="none" stroke="#0e7490" stroke-width="3" marker-end="url(#arrow)"/>
   <!-- takam site -> import (reads) -->
   <path d="M1625 562 V626 H645 V582" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arrow)"/>
-  <text x="1135" y="644" font-size="15" fill="#b45309" text-anchor="middle">read when someone runs db:push</text>
+  <text x="660" y="616" font-size="15" fill="#b45309">read when someone runs db:push</text>
   <!-- pipeline -> vercel -->
-  <line x1="1124" y1="768" x2="1124" y2="612" stroke="#0f172a" stroke-width="3" marker-end="url(#arrow)"/>
-  <text x="1136" y="690" font-size="15" font-weight="600" fill="#0f172a">deploys the API and the web app</text>
+  <path d="M1124 768 V680 H1460 V370 H1432" fill="none" stroke="#0f172a" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1472" y="640" font-size="15" font-weight="600" fill="#0f172a">deploys the API and the web app</text>
 </svg>
