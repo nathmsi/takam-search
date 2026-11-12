@@ -1,46 +1,13 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import type { PGlite, Transaction } from '@electric-sql/pglite';
-
-// The two kinds of object of the Takam site, as `GET /api/Chapter` and `GET /api/Document` gave them (only the fields we read).
-interface SiteChapter {
-  readonly sfid: string;
-  readonly name: string;
-  readonly rtn_codetext__c: string;
-  readonly rtn_chaptertype__c: 'Main' | 'Secondary';
-  readonly rtn_parentchapter__c: string | null;
-}
-
-interface SiteDocument {
-  readonly id: number;
-  readonly sfid: string;
-  readonly name: string;
-  readonly documenttype: string;
-  readonly documentcodetext: string | null;
-  readonly description: string | null;
-  readonly keywords: string | null;
-  readonly versionnumber: number;
-  readonly datevalidfrom: string | null;
-  readonly datevalidto: string | null;
-  readonly mainchaptercode: number | null;
-  readonly subchaptercode: number | null;
-  readonly firstnamechapter: string | null;
-  readonly secondnamechapter: string | null;
-  readonly secondchapternumber: string | null;
-  readonly relatedtochapter: string | null;
-  readonly parentdocument: string | null;
-}
+import type { SiteChapter } from './site-chapter';
+import type { SiteData } from './site-data';
+import type { SiteDocument } from './site-document';
+import type { SqlRunner } from './sql-runner';
+import type { TransactionRunner } from './transaction-runner';
 
 /** The chapters that were written, and which chapter an id of the site stands for. */
 interface ChapterIndex {
   readonly codes: Set<string>;
   readonly codeOfSiteId: Map<string, string>;
-}
-
-const DATA_DIRECTORY: string = join(__dirname, '..', '..', 'data');
-
-function readJson<T>(fileName: string): T {
-  return JSON.parse(readFileSync(join(DATA_DIRECTORY, fileName), 'utf8')) as T;
 }
 
 /** Text as it is shown: no invisible direction marks, nothing for a blank. */
@@ -50,22 +17,21 @@ function clean(text: string | null): string | null {
 }
 
 /**
- * Fills the empty database from the two files of `data/` (the objects of the Takam site). Only the documents that have a
- * number (`H.1.2.1`) are kept: the others are files attached to a form, which nobody looks for.
+ * Fills the empty database from the data of the Takam site. Only the documents that have a number (`H.1.2.1`) are kept: the
+ * others are files attached to a form, which nobody looks for. It fills PGlite as well as the remote database (`pnpm db:push`):
+ * the documents go in one query, so the distance to a remote database costs one trip, not 900.
  */
-export async function loadData(db: PGlite): Promise<void> {
-  const chapters: SiteChapter[] = readJson('Chapter.json');
-  const documents: SiteDocument[] = readJson<SiteDocument[]>('Document.json').filter((document) => document.documentcodetext);
+export async function loadData(db: TransactionRunner, data: SiteData): Promise<void> {
+  const documents: SiteDocument[] = data.documents.filter((document) => document.documentcodetext);
   await db.transaction(async (transaction) => {
-    const index: ChapterIndex = await insertChapters(transaction, chapters, documents);
+    const index: ChapterIndex = await insertChapters(transaction, data.chapters, documents);
     await insertDocuments(transaction, documents, index);
     await putChildrenInTheChapterOfTheirParent(transaction);
-    await insertEmbeddings(transaction);
   });
 }
 
 /** A form, a message or a temporary instruction has no chapter of its own: it sits in the chapter of the instruction it belongs to. */
-async function putChildrenInTheChapterOfTheirParent(transaction: Transaction): Promise<void> {
+async function putChildrenInTheChapterOfTheirParent(transaction: SqlRunner): Promise<void> {
   await transaction.query(
     `UPDATE documents child SET chapter_code = parent.chapter_code
      FROM documents parent
@@ -73,7 +39,7 @@ async function putChildrenInTheChapterOfTheirParent(transaction: Transaction): P
   );
 }
 
-async function insertChapters(transaction: Transaction, chapters: SiteChapter[], documents: SiteDocument[]): Promise<ChapterIndex> {
+async function insertChapters(transaction: SqlRunner, chapters: SiteChapter[], documents: SiteDocument[]): Promise<ChapterIndex> {
   const index: ChapterIndex = { codes: new Set(), codeOfSiteId: new Map() };
   const add = async (code: string, title: string, parentCode: string | null): Promise<void> => {
     await transaction.query('INSERT INTO chapters (code, title, parent_code) VALUES ($1, $2, $3)', [code, title, parentCode]);
@@ -107,30 +73,49 @@ async function addChaptersMissingFromTheSite(
   }
 }
 
-async function insertDocuments(transaction: Transaction, documents: SiteDocument[], index: ChapterIndex): Promise<void> {
+// The columns of `documents` that are written, in the order of `documentRow`, with the type of each one: they go as one array per column.
+const DOCUMENT_COLUMNS: readonly { readonly name: string; readonly type: string }[] = [
+  { name: 'id', type: 'int' },
+  { name: 'site_id', type: 'text' },
+  { name: 'code_text', type: 'text' },
+  { name: 'code', type: 'text' },
+  { name: 'title', type: 'text' },
+  { name: 'type', type: 'text' },
+  { name: 'description', type: 'text' },
+  { name: 'keywords', type: 'text' },
+  { name: 'version', type: 'int' },
+  { name: 'valid_from', type: 'date' },
+  { name: 'valid_to', type: 'date' },
+  { name: 'chapter_code', type: 'text' },
+  { name: 'parent_id', type: 'int' },
+];
+
+const INSERT_DOCUMENTS_SQL = `INSERT INTO documents (${DOCUMENT_COLUMNS.map((column) => column.name).join(', ')})
+  SELECT * FROM unnest(${DOCUMENT_COLUMNS.map((column, position) => `$${position + 1}::${column.type}[]`).join(', ')})`;
+
+function documentRow(document: SiteDocument, index: ChapterIndex, idOfSiteId: Map<string, number>): unknown[] {
+  const codeText = document.documentcodetext as string;
+  return [
+    document.id,
+    document.sfid,
+    codeText,
+    codeText.replace(/^[A-Za-z]+\./, ''),
+    clean(document.name),
+    document.documenttype,
+    clean(document.description),
+    clean(document.keywords),
+    document.versionnumber,
+    document.datevalidfrom?.slice(0, 10) ?? null,
+    document.datevalidto?.slice(0, 10) ?? null,
+    chapterOf(document, index),
+    idOfSiteId.get(document.parentdocument ?? '') ?? null,
+  ];
+}
+
+async function insertDocuments(transaction: SqlRunner, documents: SiteDocument[], index: ChapterIndex): Promise<void> {
   const idOfSiteId: Map<string, number> = new Map(documents.map((document) => [document.sfid, document.id]));
-  for (const document of documents) {
-    const codeText = document.documentcodetext as string;
-    await transaction.query(
-      `INSERT INTO documents (id, site_id, code_text, code, title, type, description, keywords, version, valid_from, valid_to, chapter_code, parent_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      [
-        document.id,
-        document.sfid,
-        codeText,
-        codeText.replace(/^[A-Za-z]+\./, ''),
-        clean(document.name),
-        document.documenttype,
-        clean(document.description),
-        clean(document.keywords),
-        document.versionnumber,
-        document.datevalidfrom?.slice(0, 10) ?? null,
-        document.datevalidto?.slice(0, 10) ?? null,
-        chapterOf(document, index),
-        idOfSiteId.get(document.parentdocument ?? '') ?? null,
-      ],
-    );
-  }
+  const rows: unknown[][] = documents.map((document) => documentRow(document, index, idOfSiteId));
+  await transaction.query(INSERT_DOCUMENTS_SQL, DOCUMENT_COLUMNS.map((_, position) => rows.map((row) => row[position])));
 }
 
 /**
@@ -142,15 +127,4 @@ function chapterOf(document: SiteDocument, index: ChapterIndex): string | null {
   if (fromSiteId !== undefined) return fromSiteId;
   const fromNumbers = `${document.mainchaptercode}.${document.subchaptercode}`;
   return index.codes.has(fromNumbers) ? fromNumbers : null;
-}
-
-/** `data/embeddings.json` (made by `pnpm data:embed`): `{ vectors: { "H.1.2.1": [768 numbers] } }`, put in `documents.embedding`. No file = no search by meaning. */
-async function insertEmbeddings(transaction: Transaction): Promise<void> {
-  if (!existsSync(join(DATA_DIRECTORY, 'embeddings.json'))) return;
-  const { vectors } = readJson<{ vectors: Record<string, number[]> }>('embeddings.json');
-  const codeTexts: string[] = Object.keys(vectors);
-  await transaction.query('UPDATE documents d SET embedding = v.embedding::vector FROM unnest($1::text[], $2::text[]) AS v(code_text, embedding) WHERE d.code_text = v.code_text', [
-    codeTexts,
-    codeTexts.map((codeText) => `[${vectors[codeText].join(',')}]`),
-  ]);
 }

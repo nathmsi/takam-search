@@ -1,8 +1,8 @@
 # Architecture
 
 ```
- Document.json + Chapter.json ──(first start)──▶ local PostgreSQL ──▶ NestJS API ──/v1──▶ React app
- (objects of the Takam site)       load-data.ts   (PGlite, 2 tables)   (search = one SQL query)
+ Takam site ──(db:push / first start)──▶ PostgreSQL ──▶ NestJS API ──/v1──▶ React app
+ (Document, Chapter)      load-data.ts   (Supabase, or PGlite locally, 2 tables)   (search = one SQL query)
 ```
 
 ## The server, folder by folder (`apps/server/src`)
@@ -33,7 +33,7 @@ A Vite + React single-page app, right-to-left Hebrew, in the order of the offici
 | **The search is one SQL query**, on cleaned columns of the table | It runs where the data is, in the open, and a person can read it (`SEARCH_SQL`). The same function cleans the stored text and the words typed, so both sides always agree | A hand-made stemming rule, not a dictionary: wrong sometimes, in the same way on both sides |
 | **PostgreSQL inside the server (PGlite)** | A real PostgreSQL, the same SQL as a server, with nothing to install: `pnpm install && pnpm dev` is enough. The tests run the real SQL on the real data | One process owns the database folder. A shared server (PostgreSQL) is the same SQL behind another connection |
 | **Only the metadata of the site's objects** (title, description, keywords, number, dates, chapters) | It is what the site already knows; no document is read | The text of an instruction is not searched |
-| **Two plain tables**, loaded from the two JSON files when the database is empty | Easy to read, easy to query (`pnpm db:query`) | Updating the data means `pnpm data:refresh` (daily by a workflow) then a redeploy or `pnpm db:reset` |
+| **Two plain tables**, read from the Takam site when the database is built | Easy to read, easy to query (`pnpm db:query`) | Updating the data means `pnpm db:push` (remote database) or `pnpm db:reset` (local); nothing does it by itself |
 | **"In force" is computed from the dates, in SQL** | The API flag `isvalid` is inverted ([site-audit.md](site-audit.md)) | A merged instruction has no end date in the data, so it counts as in force |
 | **Every typed word must match, otherwise the closest documents, said so** | A question is never a dead end, and a person is told when the answer is only close | A fixed rule: "some words" is not a ranking by meaning |
 | **Search by meaning: an experiment, hybrid, on a pgvector column** of `documents` | A question in other words finds the document ("my supplier was paid late" → late payment), in the same database and the same SQL. The words keep counting, so a number or an exact term still wins | A Gemini key (secret), a call per question, vectors only for the embedded sections, a similarity threshold (0.6) chosen by hand |

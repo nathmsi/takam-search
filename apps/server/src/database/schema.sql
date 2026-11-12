@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS documents (
   parent_id    integer REFERENCES documents (id) DEFERRABLE INITIALLY DEFERRED,   -- a form or a message belongs to an instruction
 
   -- The meaning of the document, as 768 numbers (pgvector). Made by `pnpm data:embed` from the title, the description and the
-  -- keywords, loaded from data/embeddings.json. NULL for the documents of the sections that were not embedded (the experiment).
+  -- keywords, written by `pnpm data:embed` and kept by `pnpm db:push`. NULL for a document that was not embedded yet (the experiment).
   embedding     vector(768),
 
   -- The same texts, cleaned by normalize_he(): the columns the search reads. The database keeps them up to date.

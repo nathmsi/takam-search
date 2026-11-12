@@ -17,12 +17,11 @@ Where things are in the code:
 | The route `/v1/documents` and its SQL | `apps/server/src/documents/` |
 | The route `/v1/chapters` and its SQL | `apps/server/src/chapters/` |
 | The route `/health`, the error body, the settings | `apps/server/src/health/`, `src/errors/`, `src/settings.ts` |
-| The two objects of the site | `apps/server/data/` |
+| The saved answers of the site (tests only) | `apps/server/test/fixtures/` |
 | The pages and components (home, search, list, details, theme) | `apps/web/src/pages/`, `apps/web/src/components/` ([ui.md](ui.md)) |
 | The text of the interface, the tokens | `apps/web/src/i18n/messages.ts`, `apps/web/src/styles/tokens.css` |
 | The shared types | `packages/contracts/src/index.ts` |
 | The pipeline (checks, deploy, checks of the live site) | `.github/workflows/ci.yml`, `scripts/smoke-test.mjs` ([testing.md](testing.md)) |
 | The homework document "מטלת בית" (Hebrew PDF: problems, the search problem, the solution, the AI switch, architecture, tests, part C) | `docs/overview/` (`node docs/overview/build.mjs` rebuilds the picture and the PDF; its numbers are those of 2026-11-11) |
-| The daily reading of the site | `.github/workflows/refresh-data.yml` ([data.md](data.md)) |
 
-Commands (from the root): `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm db:reset`, `pnpm data:refresh`, `pnpm data:embed`, `pnpm db:query "SELECT …"`.
+Commands (from the root): `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm db:reset`, `pnpm data:embed`, `pnpm db:push`, `pnpm db:query "SELECT …"`.

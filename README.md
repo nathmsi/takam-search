@@ -4,9 +4,9 @@ A better search for the **Takam instructions**: the binding rules of Israel's Ac
 
 A React web app and a NestJS API over a PostgreSQL database that we own, in one pnpm monorepo. Everything is TypeScript. An AI "search by meaning" (embeddings in pgvector) can be switched on and off from the header.
 
-![Architecture of Takam Search: the browser (React, Vite), Vercel (web app and NestJS API), the PostgreSQL database with pgvector, the data files, Gemini, the Takam site, the daily job and the CI/CD pipeline](docs/overview/architecture.png)
+![Architecture of Takam Search: the browser (React, Vite), Vercel (web app and NestJS API), the PostgreSQL database with pgvector, Gemini, the Takam site and the CI/CD pipeline](docs/overview/architecture.png)
 
-*From the browser to the database, the daily job and the pipeline. A Hebrew write-up of the assignment (problem, solution, architecture, tests) is in [docs/overview/takam-search.pdf](docs/overview/takam-search.pdf).*
+*From the browser to the database and the pipeline. A Hebrew write-up of the assignment (problem, solution, architecture, tests) is in [docs/overview/takam-search.pdf](docs/overview/takam-search.pdf).*
 
 ## The problem
 
@@ -25,7 +25,7 @@ A civil servant with a concrete situation, such as *"what do I do if the budget 
 | Problem | What happens | What this project does |
 |---|---|---|
 | **1. One call brings everything** | `GET /api/Document` sends all 1126 documents (875 KB, 75 KB gzipped) and ignores any parameter: `?search=...` returns the same bytes. The browser must filter, so the search can only be a plain "contains" | The search is SQL on the server; the list sends 9 fields per document, the full document only when it is opened |
-| **2. No cache** | No `Cache-Control`, no `ETag`; the same 75 KB list was downloaded twice in one visit (home page, then list) | A request cache in the web app (TanStack Query: 5 minutes, chapters once per visit); the data is refreshed once a day in our database |
+| **2. No cache** | No `Cache-Control`, no `ETag`; the same 75 KB list was downloaded twice in one visit (home page, then list) | A request cache in the web app (TanStack Query: 5 minutes, chapters once per visit); the data is read once by `pnpm db:push` and then lives in our database |
 | **3. Three chained calls to open one instruction** | `DocumentVersion/<id>`, then `RelatedDocumentId/<id>`, then `DocumentAttached/<id>`, one after the other (about 80 ms apart), although the id is already known and nothing in one depends on the previous | One call (`GET /v1/documents/:codeText`) returns the document and its related documents; the Takam site is called only for the file, when someone clicks download |
 | **4. Calls whose answer is empty** | `/api/Tag` answers `[]` at every load; `RelatedDocumentId` and `DocumentAttached` often answer `[]` | No tag call; related documents come inside the document's own answer |
 
@@ -44,7 +44,7 @@ Behind it, more defects: an inverted validity flag, a chapter missing from the f
 - **Nothing found is a normal answer**, with a valid address and a way to clear the filters.
 - **Speed**: one SQL query on indexed, pre-cleaned columns; no list is sent to the browser to be filtered there.
 
-**AI on top, as a switch.** A small ✦ button in the header turns on the **search by meaning** (off by default, `?meaning=yes` in the address). A script (`pnpm data:embed`, run by the daily job for what is new or changed) asks Gemini for an **embedding** of every document (title + description + keywords, 768 numbers) and stores it in a **pgvector** column. When the switch is on, the question is embedded too and the database orders the documents by closeness, mixed with the words (a number or an exact term still wins). *"Can I pay a supplier before I received the goods?"* finds the instructions on advance payments (1.4.2, 1.4.5), which the search by words does not (it answers with cars and hotels). Without a Gemini key, or when Gemini fails or its daily quota is spent, the search falls back on the search by words and the page says so: no error.
+**AI on top, as a switch.** A small ✦ button in the header turns on the **search by meaning** (off by default, `?meaning=yes` in the address). A script (`pnpm data:embed`, run by hand; the database keeps the vectors it has) asks Gemini for an **embedding** of every document (title + description + keywords, 768 numbers) and stores it in a **pgvector** column. When the switch is on, the question is embedded too and the database orders the documents by closeness, mixed with the words (a number or an exact term still wins). *"Can I pay a supplier before I received the goods?"* finds the instructions on advance payments (1.4.2, 1.4.5), which the search by words does not (it answers with cars and hotels). Without a Gemini key, or when Gemini fails or its daily quota is spent, the search falls back on the search by words and the page says so: no error.
 
 **The next step, if it is needed:** embed the **text of the documents** as well (chunks of the Word files in pgvector) and let the AI write an answer with its sources (RAG). It is a deeper search with its own costs and risks, so it is left out of this POC; today only the metadata of the site's own objects is searched.
 
@@ -59,7 +59,7 @@ pnpm dev            # API on http://localhost:3100, web app on http://localhost:
 
 Open <http://localhost:5173> (the home page); the search is at `/documents`. The API's own pages: <http://localhost:3100/docs> (Swagger) and <http://localhost:3100/health>.
 
-The first start creates the database (about two seconds) in `apps/server/.pgdata/`. Nothing to install and no secret needed to run it. To try the AI search, put a Gemini key in `apps/server/.env` (git ignores it; `pnpm dev` reads it): `GEMINI_API_KEY=...`. [`.env.example`](.env.example) lists every variable (`PORT`, `CORS_ORIGINS`, `DATABASE_DIR`, `VITE_API_URL`, `GEMINI_API_KEY`, `TAKAM_API_URL`).
+The first start creates the database in `apps/server/.pgdata/`, reading the documents from the Takam site once (a few seconds, it needs the network). Nothing to install and no secret needed to run it. To try the AI search, put a Gemini key in `apps/server/.env` (git ignores it; `pnpm dev` reads it): `GEMINI_API_KEY=...`. [`.env.example`](.env.example) lists every variable (`PORT`, `CORS_ORIGINS`, `DATABASE_DIR`, `DATABASE_URL`, `VITE_API_URL`, `GEMINI_API_KEY`, `TAKAM_API_URL`).
 
 | Command | What it does |
 |---|---|
@@ -72,26 +72,27 @@ The first start creates the database (about two seconds) in `apps/server/.pgdata
 | `pnpm test:e2e` | Builds both apps and runs the Playwright suite (phone and desktop, axe in both themes) on its own ports |
 | `pnpm db:query "SELECT …"` | Runs a SQL query on a fresh copy of the database and prints the rows |
 | `pnpm db:reset` | Forgets the database; the next start rebuilds it |
-| `pnpm --filter @takam/server data:refresh` | Reads the Takam site again and replaces the two data files |
-| `pnpm --filter @takam/server data:embed --all` | Makes the embeddings (needs `GEMINI_API_KEY`): only what is new or changed |
+| `pnpm --filter @takam/server db:push` | Reads the Takam site and rebuilds the tables of the remote database of `DATABASE_URL` (Supabase, schema `takam_poc`) in one transaction; the vectors already there are kept |
+| `pnpm --filter @takam/server data:embed` | Gives a vector to the documents that have none, in the remote database (needs `GEMINI_API_KEY` and `DATABASE_URL`) |
 
 If something already listens on port 3100 or 5173, set `PORT` (and `API_PROXY_TARGET` for the web dev server).
 
 ## How it is built
 
 ```
-Takam site ──(daily job)──▶ data/*.json ──(start)──▶ PostgreSQL + pgvector ──▶ NestJS API ──/v1──▶ React app
- Document, Chapter           in git                    2 tables, SQL functions     controller → service → repository
-                                  ▲                                                     │
-                       pnpm data:embed ◀── Gemini ◀─────────── question (when the ✦ switch is on)
+Takam site ──(pnpm db:push, by hand)──▶ PostgreSQL + pgvector (Supabase) ◀── NestJS API ──/v1──▶ React app
+ Document, Chapter                       2 tables, SQL functions            controller → service → repository
+                                                ▲                                  │
+                            pnpm data:embed ◀── Gemini ◀──────────── question (when the ✦ switch is on)
 ```
+(Without `DATABASE_URL`, locally, the API fills its own PGlite database from the site at its first start.)
 
 | Part | |
 |---|---|
 | `apps/server` | NestJS 11, one folder per route (controller → service → repository → database), plus `ai/` (`AiService` and one class per provider). The search is `SEARCH_SQL` in `src/documents/documents.repository.ts`; the cleaning of Hebrew is the SQL functions of `src/database/schema.sql`. See [apps/server/README.md](apps/server/README.md) |
 | `apps/web` | React 19, Vite, **TanStack Query as the one cache of the API's answers** (see below), React Router, CSS Modules over design tokens (light and dark), Heebo font, laid out in the order of the official site ([docs/ui.md](docs/ui.md)). Vitest, Testing Library and Playwright |
 | `packages/contracts` | The types of the API answers, shared by the two apps |
-| `.github/workflows/` | `ci.yml`: checks, end-to-end tests, deploy, checks of the live site. `refresh-data.yml`: the daily reading of the site |
+| `.github/workflows/` | `ci.yml`: checks, end-to-end tests, deploy, checks of the live site |
 
 **The web app calls the API through a cache (TanStack Query), the recommended way, not with hand-made `useState` and `useEffect`.** Every answer is cached under its key (the filters of a search, the number of a document): going back to a search or a document already seen shows it at once, with no request. An answer stays fresh for 5 minutes and the chapters for the whole visit; identical requests are merged into one, an old request is cancelled when the person keeps typing (on top of a 250 ms pause), and the previous list stays on screen until the next one arrives (`keepPreviousData`, no flash of an empty page). A failing server is tried twice more, a refusal (4xx) is not; the loading, error and "try again" states come from the same place.
 
@@ -105,13 +106,13 @@ More: [docs/README.md](docs/README.md) is the map ([architecture](docs/architect
 
 | Level | What | Count |
 |---|---|---|
-| Server unit | The SQL functions, the loader, the search SQL on the real data in memory, the service, the AI module (fake provider, faked `fetch`), the Takam site client | 147 tests with the end-to-end ones below |
+| Server unit | The SQL functions, the loader, the search SQL on the saved data in memory, the service, the AI module (fake provider, faked `fetch`), the Takam site client | 158 tests with the end-to-end ones below |
 | Server end-to-end | The whole application, one file per route, the AI and the Takam site faked | included above |
 | Web unit and component | Pages over a fake API, every component, the API client, the design tokens (contrast AA) | 99 |
 | Web end-to-end | Playwright on the builds, phone and desktop, axe accessibility in both themes | 108 |
 | Live site | `scripts/smoke-test.mjs`, 12 checks run after every deploy | 12 |
 
-**Coverage, measured (`pnpm test:coverage`), not perfect:** server 99.0 % of statements, 87.4 % of branches, 100 % of functions and lines; web 98.5 % of statements, 93.8 % of branches, 97.8 % of functions, 99.3 % of lines. The pipeline fails if a change brings the coverage under the bars set in `apps/server/jest.config.js` and `apps/web/vite.config.ts`. The end-to-end tests are not counted in these figures. What is not covered is listed by the report (mostly defensive branches).
+**Coverage, measured (`pnpm test:coverage`), not perfect:** server 99.3 % of statements, 89.0 % of branches, 100 % of functions and lines; web 98.5 % of statements, 93.8 % of branches, 97.8 % of functions, 99.3 % of lines. The pipeline fails if a change brings the coverage under the bars set in `apps/server/jest.config.js` and `apps/web/vite.config.ts`. The end-to-end tests are not counted in these figures. What is not covered is listed by the report (mostly defensive branches).
 
 **Edge cases tested:** an empty answer, a one-word and a question search, `H.7.1.5` (hidden by the site), chapter 10 (missing on the site), singular and plural, quotes, an injection attempt in the words, an unknown document, the AI key missing or the AI failing, the Takam site failing, a wrong file id, CORS read-only, a phone and a desktop screen.
 
@@ -121,7 +122,7 @@ More: [docs/README.md](docs/README.md) is the map ([architecture](docs/architect
 - API: https://takam-search-api.vercel.app (try `/health`, `/v1/documents?q=קופות ביטחון`)
 
 Two Vercel projects, one per app. Settings live on Vercel, set with the CLI: the API has `CORS_ORIGINS` (the address of the web app), the web app has `VITE_API_URL` (the address of the API) and a rewrite of every path to `index.html` (`apps/web/vercel.json`).
-The database is built in memory on every cold start of the API (about 8 to 10 seconds for the first request, then fast). PGlite's binary files are read in `read-pglite-files.ts` with plain paths so that Vercel includes them.
+Without `DATABASE_URL` the database is built in memory on every cold start of the API (about 8 to 10 seconds for the first request, then fast). With `DATABASE_URL` the API connects to a PostgreSQL on Supabase (schema `takam_poc`, filled by `pnpm db:push`) and builds nothing: that is the way out of the slow first request. PGlite's binary files are read in `read-pglite-files.ts` with plain paths so that Vercel includes them.
 **Only GitHub deploys**, and only after every check: `.github/workflows/ci.yml` runs the lint, the types, the build and the server and web tests, then the end-to-end tests, then (on `main` only) deploys the API and the web app to Vercel, then runs `scripts/smoke-test.mjs` on the live site. It needs the `VERCEL_TOKEN` secret and the repository variables `VERCEL_ORG_ID`, `VERCEL_API_PROJECT_ID` and `VERCEL_WEB_PROJECT_ID`.
 
 ## Limits you should know
@@ -129,7 +130,7 @@ The database is built in memory on every cold start of the API (about 8 to 10 se
 - The search reads titles, descriptions, keywords and numbers, **not the text of the instructions**, and the search by words has no notion of meaning (a synonym is not a match). An experiment, "search by meaning" (pgvector + Gemini embeddings of the title, description and keywords of all 922 documents), covers that.
 - The Hebrew rules (endings and prefixes) are simple rules, not a dictionary: they are right most of the time and sometimes wrong, in the same way on both sides of the comparison. They are tested on word pairs, not measured on real questions.
 - 7 of the 11 instructions that the site does not show in its tree say in their description that they were merged or renumbered, so the site probably hides them on purpose; here they are kept and their description tells where they went. They count as "in force" because the data gives them no end date.
-- The data is two committed files, read again from the site every day by a workflow (`pnpm data:refresh`); between two readings it is up to a day old. The interface is Hebrew only.
+- The data is read from the site when someone runs `pnpm db:push`, so it is as old as the last push (no daily job). The interface is Hebrew only.
 - The harm of the problem on real users was not measured.
 
 ## Engineering questions (part C of the assignment)
@@ -154,20 +155,20 @@ The database is built in memory on every cold start of the API (about 8 to 10 se
 
 ### 2. Quality and maintainability: a significant limit
 
-**The database lives inside the API process and is rebuilt from committed files at every start.** Consequences:
-- the first request after a quiet period waits for the build (about 3 seconds locally, 8 to 10 on Vercel);
-- new data reaches the live API only through a redeploy (the daily pipeline does it, but it is a deploy, not a write);
-- each instance has its own copy, so nothing can ever be written;
-- `embeddings.json` (9 MB of numbers) is committed, so the git history grows with every change;
+**The data enters the database by hand (`pnpm db:push`), and the local database is rebuilt at every start.** Consequences:
+- the production API reads a PostgreSQL on Supabase (`DATABASE_URL`), so a cold start no longer builds anything; without that variable (and for anyone running the project locally) the database lives inside the API process, is filled from the site at its first start, and on Vercel would be rebuilt at every cold start (3 seconds locally, 8 to 10 on Vercel);
+- nothing refreshes the data by itself: the documents are as old as the last `pnpm db:push`, and the vectors of a changed document stay as they were (a new document has none until `pnpm data:embed`);
+- the remote database is shared with other apps: our tables live in the schema `takam_poc` and are read in read-only transactions, but the project and its role are not ours alone;
+- the tests read a saved copy of the site's two answers (`apps/server/test/fixtures`), so they never depend on the site;
 - the Hebrew rules and the 0.06 closeness window of the AI search are hand-tuned on a small sample, not measured on real questions.
 
-**The change I would make:** a managed PostgreSQL with pgvector (Neon, Supabase...) read through a `DATABASE_URL`; the daily job becomes the only writer (it already reads, checks and embeds), and the vectors live in the database instead of git. Only `DatabaseService` changes, because every query already goes through `query()`. Then a set of real questions with the expected instruction to measure the search, instead of word pairs.
+**The change I would make:** a scheduled job that runs `db:push` and `data:embed` (with a notice when the site's answer is refused), a role of our own with only the rights on `takam_poc`, and the date of the last push in `/health`. Then a set of real questions with the expected instruction to measure the search, instead of word pairs.
 
 ### 3. Development and deployment: another developer deploying to a new environment
 
 **What would get in their way today:** the two Vercel projects, their environment variables (`CORS_ORIGINS`, `VITE_API_URL`, `GEMINI_API_KEY`) and the GitHub secret and variables were created by hand; the API must be built inside `apps/server` and deployed from the root because the build output has root-relative paths; PGlite's binary files must be read with literal paths for Vercel to include them (`read-pglite-files.ts`); and it is tied to Vercel.
 
-**What is already in place:** `pnpm install && pnpm dev` runs everything with no secret; [`.env.example`](.env.example) lists every variable; the pipeline `ci.yml` checks, deploys and checks the live site, and the daily job feeds it; nothing deploys from a laptop.
+**What is already in place:** `pnpm install && pnpm dev` runs everything with no secret; [`.env.example`](.env.example) lists every variable; the pipeline `ci.yml` checks, deploys and checks the live site; nothing deploys from a laptop.
 
 **What I would change:** describe the infrastructure as code (the Vercel projects and their variables in the repository, or a Dockerfile and a compose file so that any host works); a single `bootstrap` script that creates a new environment and prints what is missing; versions pinned (Node, pnpm, `vercel`).
 
@@ -175,10 +176,10 @@ The database is built in memory on every cold start of the API (about 8 to 10 se
 
 ### 4. Diagnosis and fault handling: a significant failure
 
-**Scenario: the Takam site changes the shape of its data, or is down, when the daily job reads it.**
+**Scenario: the Takam site changes the shape of its data, or is down, when the data is read.**
 - *How it shows:* without protection, the database would load documents with no number, searches by number would find nothing, and the API would still look healthy.
-- *How it is found and handled today:* the job asks the site with `checkSiteData` first (the answer must be a list, with at least 900 documents that have a number and 100 chapters), then builds the database from the new files to prove they load, then runs the server tests. If anything is wrong it stops and **keeps the old files**, and GitHub shows a failed run. `/health` reports the number of documents and chapters, and the smoke tests fail the pipeline if the live data is not loaded.
-- *What I would change:* tell someone (a message, not just a red run); put the date of the last successful reading in `/health`; keep the previous files as a dated copy.
+- *How it is found and handled today:* `pnpm db:push` asks the site and checks the answer with `checkSiteData` first (a list, with at least 900 documents that have a number and 100 chapters). If the answer is wrong or the site is down it stops before touching the database, which **keeps the data it has**. Then the tables are rebuilt in one transaction: a failure leaves the old data, and the API never sees a half filled database. `/health` reports the number of documents and chapters, and the smoke tests fail the pipeline if the live data is not loaded.
+- *What I would change:* run it on a schedule and tell someone when it is refused (a message, not just a red run); put the date of the last successful push in `/health`.
 
 **Scenario: Gemini fails or its quota is spent.** The search by meaning falls back on the search by words (a normal 200 with `meaningUnavailable: true`, and the page says that the AI is not available); the failure is logged by `AiService` and the provider's message is not shown. **This happened on 2026-11-11**: the free daily quota of embeddings was spent after the 922 documents were embedded, and the fix was this fallback; the provider retries the passing errors (429, 5xx) and the embedding script waits when told to slow down. I would add a metric on the rate of fallbacks, and a daily cap.
 

@@ -53,7 +53,7 @@ Measured on 2026-11-11 with `curl` (headers, sizes, timings) and with the networ
 
 - **What happens.** The answer has **no `Cache-Control` and no `ETag`**, and the CDN in front of it reports `x-sucuri-cache: EXPIRED`. In one visit the same 75 KB list (and `Chapter`, `Tag`, `docType.json`) was downloaded **twice**: once on the home page, once when moving to the list.
 - **Why it is a problem.** These data change rarely (the list is the same from one minute to the next), yet each page, each visit and each person pays the full download. On a phone or a slow office network, it is time spent waiting for something already received.
-- **Here.** The web app has a request cache (TanStack Query): a list or a document already asked is not asked again for 5 minutes, and the chapters are asked once per visit. The data itself is refreshed once a day in our database, by the daily job, not at every visit.
+- **Here.** The web app has a request cache (TanStack Query): a list or a document already asked is not asked again for 5 minutes, and the chapters are asked once per visit. The data itself is read once from the site into our database (`pnpm db:push`), not at every visit.
 
 ### Problem 3: opening an instruction makes three calls, one after the other, that could be one
 

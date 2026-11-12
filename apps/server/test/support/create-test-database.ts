@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { DatabaseService } from '../../src/database/database.service';
 
 /**
@@ -6,6 +7,7 @@ import { DatabaseService } from '../../src/database/database.service';
  */
 export async function createTestDatabase(): Promise<DatabaseService> {
   process.env.DATABASE_DIR = 'memory://';
+  process.env.TAKAM_DATA_DIR = join(__dirname, '..', 'fixtures');
   const database = new DatabaseService();
   await database.onModuleInit();
   return database;

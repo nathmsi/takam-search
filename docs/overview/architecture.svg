@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1040" width="1800" height="1040" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
-  <title>Takam Search architecture: browser, Vercel (web and API), database, daily job, CI/CD, Gemini</title>
+  <title>Takam Search architecture: browser, Vercel (web and API), database, import, CI/CD, Gemini</title>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f8fafc"/>
@@ -26,7 +26,7 @@
 
   <!-- Title -->
   <text x="40" y="62" font-size="38" font-weight="800" fill="#0f172a">Takam Search</text>
-  <text x="40" y="96" font-size="20" fill="#475569">From the browser to the database, the daily job and the pipeline</text>
+  <text x="40" y="96" font-size="20" fill="#475569">From the browser to the database and the pipeline</text>
 
   <!-- ============ BROWSER ============ -->
   <g filter="url(#shadow)">
@@ -86,23 +86,23 @@
   <line x1="1184" y1="276" x2="1208" y2="276" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
   <text x="822" y="346" font-size="16" fill="#475569">GET /v1/documents · /chapters · /health · /:code/file</text>
 
-  <!-- Data files -->
+  <!-- Import -->
   <g filter="url(#shadow)">
     <rect x="520" y="404" width="250" height="176" rx="16" fill="#ffffff" stroke="#d6dde8"/>
-    <path d="M520 420a16 16 0 0 1 16-16h218a16 16 0 0 1 16 16v28H520z" fill="#64748b"/>
+    <path d="M520 420a16 16 0 0 1 16-16h218a16 16 0 0 1 16 16v28H520z" fill="#b45309"/>
   </g>
-  <text x="540" y="433" font-size="21" font-weight="700" fill="#ffffff">data/ (in git)</text>
-  <text x="540" y="478" font-size="18" fill="#334155">Document.json · 1126</text>
-  <text x="540" y="508" font-size="18" fill="#334155">Chapter.json · 114</text>
-  <text x="540" y="538" font-size="18" fill="#334155">embeddings.json · 922</text>
-  <text x="540" y="565" font-size="15" fill="#64748b">read when the database is empty</text>
+  <text x="540" y="433" font-size="21" font-weight="700" fill="#ffffff">pnpm db:push (by hand)</text>
+  <text x="540" y="474" font-size="17" fill="#334155">1. reads /Document, /Chapter</text>
+  <text x="540" y="502" font-size="17" fill="#334155">2. checks the answer</text>
+  <text x="540" y="530" font-size="17" fill="#334155">3. rebuilds the 2 tables</text>
+  <text x="540" y="558" font-size="15" fill="#64748b">the vectors already there stay</text>
 
   <!-- Database -->
   <g filter="url(#shadow)">
     <rect x="800" y="404" width="600" height="176" rx="16" fill="#ffffff" stroke="#d6dde8"/>
     <path d="M800 420a16 16 0 0 1 16-16h568a16 16 0 0 1 16 16v28H800z" fill="#0f766e"/>
   </g>
-  <text x="820" y="433" font-size="21" font-weight="700" fill="#ffffff">Database · PostgreSQL (PGlite, inside the API)</text>
+  <text x="820" y="433" font-size="21" font-weight="700" fill="#ffffff">Database · PostgreSQL (Supabase, schema takam_poc)</text>
   <g font-size="18" fill="#0f172a">
     <rect x="822" y="466" width="170" height="44" rx="10" fill="#f0fdfa" stroke="#99f6e4"/>
     <text x="838" y="494">chapters · 122</text>
@@ -144,56 +144,41 @@
     <text x="108" y="657" font-size="19" font-weight="700" fill="#ffffff">GitHub Actions</text>
   </g>
 
-  <!-- Daily job -->
-  <g filter="url(#shadow)">
-    <rect x="70" y="700" width="470" height="270" rx="16" fill="#ffffff" stroke="#d6dde8"/>
-    <path d="M70 716a16 16 0 0 1 16-16h438a16 16 0 0 1 16 16v28H70z" fill="#b45309"/>
-  </g>
-  <text x="90" y="729" font-size="21" font-weight="700" fill="#ffffff">Daily job · refresh-data (04:00 UTC)</text>
-  <g font-size="18" fill="#334155">
-    <text x="90" y="774">1. reads /Document and /Chapter again</text>
-    <text x="90" y="806">2. checks the answer looks right</text>
-    <text x="90" y="838">3. builds the database to prove it loads</text>
-    <text x="90" y="870">4. runs the server tests</text>
-    <text x="90" y="902">5. commits the new data to main</text>
-    <text x="90" y="934">6. starts the CI/CD pipeline</text>
-  </g>
-
   <!-- Pipeline -->
   <g filter="url(#shadow)">
-    <rect x="600" y="700" width="1130" height="270" rx="16" fill="#ffffff" stroke="#d6dde8"/>
-    <path d="M600 716a16 16 0 0 1 16-16h1098a16 16 0 0 1 16 16v28H600z" fill="#24292f"/>
+    <rect x="70" y="700" width="1660" height="270" rx="16" fill="#ffffff" stroke="#d6dde8"/>
+    <path d="M70 716a16 16 0 0 1 16-16h1628a16 16 0 0 1 16 16v28H70z" fill="#24292f"/>
   </g>
-  <text x="620" y="729" font-size="21" font-weight="700" fill="#ffffff">CI/CD · the only road to production</text>
+  <text x="90" y="729" font-size="21" font-weight="700" fill="#ffffff">CI/CD · the only road to production (the data is not part of it)</text>
   <g font-size="19" font-weight="700" fill="#0f172a">
-    <rect x="624" y="770" width="240" height="150" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
-    <text x="640" y="802">1 · Checks</text>
-    <text x="640" y="832" font-size="16" font-weight="400" fill="#475569">lint · types · build</text>
-    <text x="640" y="856" font-size="16" font-weight="400" fill="#475569">server tests (SQL, API)</text>
-    <text x="640" y="880" font-size="16" font-weight="400" fill="#475569">web tests (components)</text>
+    <rect x="94" y="770" width="380" height="150" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="114" y="802">1 · Checks</text>
+    <text x="114" y="832" font-size="16" font-weight="400" fill="#475569">lint · types · build</text>
+    <text x="114" y="856" font-size="16" font-weight="400" fill="#475569">server tests (SQL, API)</text>
+    <text x="114" y="880" font-size="16" font-weight="400" fill="#475569">web tests (components)</text>
 
-    <rect x="900" y="770" width="240" height="150" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
-    <text x="916" y="802">2 · End-to-end</text>
-    <text x="916" y="832" font-size="16" font-weight="400" fill="#475569">Playwright, phone + desktop</text>
-    <text x="916" y="856" font-size="16" font-weight="400" fill="#475569">real server, real build</text>
-    <text x="916" y="880" font-size="16" font-weight="400" fill="#475569">accessibility (axe), 2 themes</text>
+    <rect x="514" y="770" width="380" height="150" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="534" y="802">2 · End-to-end</text>
+    <text x="534" y="832" font-size="16" font-weight="400" fill="#475569">Playwright, phone + desktop</text>
+    <text x="534" y="856" font-size="16" font-weight="400" fill="#475569">real server, real build</text>
+    <text x="534" y="880" font-size="16" font-weight="400" fill="#475569">accessibility (axe), 2 themes</text>
 
-    <rect x="1176" y="770" width="240" height="150" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
-    <text x="1192" y="802">3 · Deploy</text>
-    <text x="1192" y="832" font-size="16" font-weight="400" fill="#475569">only a push to main,</text>
-    <text x="1192" y="856" font-size="16" font-weight="400" fill="#475569">only if 1 and 2 passed:</text>
-    <text x="1192" y="880" font-size="16" font-weight="400" fill="#475569">the API, then the web app</text>
+    <rect x="934" y="770" width="380" height="150" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
+    <text x="954" y="802">3 · Deploy</text>
+    <text x="954" y="832" font-size="16" font-weight="400" fill="#475569">only a push to main,</text>
+    <text x="954" y="856" font-size="16" font-weight="400" fill="#475569">only if 1 and 2 passed:</text>
+    <text x="954" y="880" font-size="16" font-weight="400" fill="#475569">the API, then the web app</text>
 
-    <rect x="1452" y="770" width="254" height="150" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
-    <text x="1468" y="802">4 · Live checks</text>
-    <text x="1468" y="832" font-size="16" font-weight="400" fill="#475569">12 smoke tests on the real</text>
-    <text x="1468" y="856" font-size="16" font-weight="400" fill="#475569">site: search, AI key, file</text>
-    <text x="1468" y="880" font-size="16" font-weight="400" fill="#475569">link, CORS, web app</text>
+    <rect x="1354" y="770" width="350" height="150" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
+    <text x="1374" y="802">4 · Live checks</text>
+    <text x="1374" y="832" font-size="16" font-weight="400" fill="#475569">12 smoke tests on the real</text>
+    <text x="1374" y="856" font-size="16" font-weight="400" fill="#475569">site: search, AI key, file</text>
+    <text x="1374" y="880" font-size="16" font-weight="400" fill="#475569">link, CORS, web app</text>
   </g>
-  <line x1="864" y1="845" x2="898" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="1140" y1="845" x2="1174" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="1416" y1="845" x2="1450" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <text x="620" y="952" font-size="16" fill="#64748b">A failing step stops everything after it. Nobody deploys from a laptop.</text>
+  <line x1="474" y1="845" x2="512" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="894" y1="845" x2="932" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="1314" y1="845" x2="1352" y2="845" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="94" y="952" font-size="16" fill="#64748b">A failing step stops everything after it. Nobody deploys from a laptop.</text>
 
   <!-- ============ ARROWS BETWEEN BLOCKS ============ -->
   <!-- browser -> web app -->
@@ -205,23 +190,17 @@
   <!-- repository -> database -->
   <line x1="1294" y1="314" x2="1294" y2="402" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow-green)"/>
   <text x="1282" y="366" font-size="15" fill="#0f766e" text-anchor="end">SQL, values as parameters</text>
-  <!-- data files -> database -->
+  <!-- import -> database -->
   <line x1="770" y1="492" x2="798" y2="492" stroke="#475569" stroke-width="3" marker-end="url(#arrow)"/>
   <!-- api -> gemini -->
   <line x1="1400" y1="230" x2="1488" y2="230" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrow-violet)"/>
   <text x="1444" y="220" font-size="15" fill="#7c3aed" text-anchor="middle">question</text>
   <!-- api -> takam site (file) -->
   <path d="M1400 330 L1430 330 L1430 400 L1488 400" fill="none" stroke="#0e7490" stroke-width="3" marker-end="url(#arrow)"/>
-  <!-- daily job -> data files (commit) -->
-  <path d="M530 698 V582" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arrow)"/>
-  <text x="522" y="640" font-size="15" fill="#b45309" text-anchor="end">commits new data</text>
-  <!-- daily job -> takam site (reads) -->
-  <path d="M540 740 H578 V626 H1625 V562" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arrow)"/>
-  <text x="1100" y="644" font-size="15" fill="#b45309" text-anchor="middle">reads the site every day</text>
-  <!-- daily job -> pipeline -->
-  <line x1="540" y1="845" x2="598" y2="845" stroke="#334155" stroke-width="3" marker-end="url(#arrow)"/>
-  <text x="569" y="832" font-size="14" fill="#475569" text-anchor="middle">starts</text>
+  <!-- takam site -> import (reads) -->
+  <path d="M1625 562 V626 H645 V582" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1135" y="644" font-size="15" fill="#b45309" text-anchor="middle">read when someone runs db:push</text>
   <!-- pipeline -> vercel -->
-  <line x1="1296" y1="768" x2="1296" y2="612" stroke="#0f172a" stroke-width="3" marker-end="url(#arrow)"/>
-  <text x="1308" y="690" font-size="15" font-weight="600" fill="#0f172a">deploys the API and the web app</text>
+  <line x1="1124" y1="768" x2="1124" y2="612" stroke="#0f172a" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1136" y="690" font-size="15" font-weight="600" fill="#0f172a">deploys the API and the web app</text>
 </svg>

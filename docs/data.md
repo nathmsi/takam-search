@@ -2,27 +2,27 @@
 
 ## Where it comes from
 
-Two files in `apps/server/data/`: the objects of the Takam site, exactly as its API gave them (read again every day, see "Keeping the data up to date").
+The Takam site itself: its API gives two lists, and nothing of them is kept in the repository.
 
-| File | What | Rows |
+| Route | What | Rows |
 |---|---|---|
-| `Document.json` | `GET /api/Document`: every document of the site | 1126 |
-| `Chapter.json` | `GET /api/Chapter`: the chapters (15) and sub-chapters (99) | 114 |
+| `GET /api/Document` | every document of the site | 1126 (922 have a number and are kept) |
+| `GET /api/Chapter` | the chapters (15) and sub-chapters (99) | 114 (122 chapters in the database: the site does not list chapter 10 and some others, they are recreated from the documents) |
 
-Nothing else is kept: no Word file, no text of the instructions, no versions (an earlier version of the project read them; it was removed on purpose).
+`src/database/fetch-site-data.ts` reads them (the site refuses a request without a `User-Agent`; it sends `takam-search`; `TAKAM_API_URL` changes the address) and **refuses an answer that looks wrong**: not a list, fewer than 900 documents with a number, fewer than 100 chapters (`checkSiteData`), or an HTTP error. A bad answer never replaces data that works.
+
+Nothing else is kept: no Word file, no text of the instructions, no versions (an earlier version of the project read them; it was removed on purpose). The tests do not ask the site: they read a saved copy of the two answers in `apps/server/test/fixtures/` (see [testing.md](testing.md)); `TAKAM_DATA_DIR` names that folder.
 
 ## What the server does with them
 
-When the server starts, `src/database/database.service.ts` opens its database, runs `schema.sql`, and **if the tables are empty** fills them with `src/database/load-data.ts`. The database is PostgreSQL itself, running inside the server (PGlite): nothing to install. It lives in `apps/server/.pgdata/` (created at the first start, about 40 MB, not committed); `pnpm db:reset` deletes it so the next start rebuilds it.
+When the server starts, `src/database/database.service.ts` opens its database, runs `schema.sql`, and **if the tables are empty** fills them with `src/database/load-data.ts`. (With `DATABASE_URL` set it does none of this: it connects to the remote database, which `pnpm db:push` filled, see [the remote database](#the-remote-database).) The database is PostgreSQL itself, running inside the server (PGlite): nothing to install. It lives in `apps/server/.pgdata/` (created at the first start, about 40 MB, not committed); `pnpm db:reset` deletes it so the next start rebuilds it.
 
 ## Keeping the data up to date
 
-`pnpm data:refresh` (in `apps/server`, `scripts/refresh-data.ts`) reads `GET /api/Document` and `GET /api/Chapter` from the site again and replaces the two files. The files are the answers byte for byte, so `git diff` shows something only when the site changed.
+**By hand, when the site has changed:** `pnpm db:push` (needs `DATABASE_URL`, see [the remote database](#the-remote-database)). There is no daily job and no data file to commit: the database is the one place of the data.
 
-- It **changes nothing** when the answer looks wrong: not a list, fewer than 900 documents with a number, fewer than 100 chapters (`checkSiteData`), or an HTTP error. It also builds the database from the new files, and puts the old files back if that fails.
-- The site refuses requests without a `User-Agent`; the script sends `takam-search-data-refresh`. `TAKAM_API_URL` (default `https://takam.mof.gov.il/api`) changes the address.
-- **Every day at 04:00 UTC** the GitHub workflow `.github/workflows/refresh-data.yml` runs it (and on demand from the Actions tab). When the files changed it runs the server tests, commits `chore(data): read the Takam site again` to `main`, and starts the CI/CD (`ci.yml`), which checks everything again, deploys the API and the web app, and checks the live site ([testing.md](testing.md)).
-- The API keeps the data it loaded at start: on Vercel the database is rebuilt in memory at every cold start, so a redeploy is what brings the new data; locally, restart the server after `pnpm db:reset`.
+- Locally, without `DATABASE_URL`, the first start of the server reads the site once and fills `apps/server/.pgdata/` (a few seconds, it needs the network); `pnpm db:reset` forgets it so the next start reads the site again.
+- Without `DATABASE_URL` on Vercel the API would read the site at every cold start (slow, and the site must be up): that is why the production API has `DATABASE_URL`.
 
 ## The file of a document (Word)
 
@@ -30,11 +30,9 @@ The Word files are **not stored** (the project searches the metadata only). The 
 
 ## Embeddings (experiment)
 
-`pnpm data:embed` with `GEMINI_API_KEY` in `apps/server/.env` (in `apps/server`, `scripts/embed-documents.ts`) reads `Document.json`, keeps the documents of one main chapter (`--chapter 1`, default 1) or all of them (`--all`: the 922, about 18 requests, a few minutes because Gemini limits the requests per minute and the script waits 30 seconds when told to), and asks Gemini (`gemini-embedding-001`, 768 numbers, task "document") for the embedding of **title + description + keywords** only: the fields of the site's own objects, not the Word files. It writes `data/embeddings.json` (`{ model, dimensions, vectors: { "H.1.2.1": [...] } }`), skips what is already there (`--force` redoes it) and never writes the key. When the database is built, the loader copies each vector into `documents.embedding`. No file = no embeddings, and the search by words is unchanged. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
+The vectors live **in the database only** (`documents.embedding`, pgvector, 768 numbers), nowhere in git. `pnpm data:embed` (`scripts/embed-documents.ts`, needs `GEMINI_API_KEY` and `DATABASE_URL`) gives a vector to every document of the remote database that has none (`--force` makes them all again): it asks Gemini (`gemini-embedding-001`, task "document") for the embedding of **title + description + keywords** only, the fields of the site's own objects, not the Word files, 50 documents per request, and waits 30 seconds when Gemini limits the requests per minute. It never writes the keys. The question typed by a person is embedded at request time (task "query"). Embedding the full text of the documents would be a later step with the same column.
 
-**The daily job runs it too** (`refresh-data.yml`, only when the repository has a `GEMINI_API_KEY` secret): after reading the site again it embeds what is new or whose text changed, and drops the vector of a document that left the site, so the AI search never lags behind the data. Each vector is kept with a hash of its text for that.
-
-After `pnpm data:embed`: `pnpm db:reset`, restart the server, turn on the sparkle button of the header or add `meaning=yes`. `data/embeddings.json` is about 9 MB (the 922 vectors); the loader copies them with one SQL query, so the start-up stays fast.
+`pnpm db:push` keeps the vector of every document that is already in the database, even when its text changed (for now): a new document has no vector until `pnpm data:embed` is run, and the search by words still finds it (the search by meaning is hybrid). A local PGlite has no vectors: the search by meaning is a feature of the remote database.
 
 ## The tables (`schema.sql`)
 
@@ -92,4 +90,12 @@ pnpm db:query "SELECT code_text, title FROM documents WHERE chapter_code = '1.4'
 pnpm db:query "SELECT search_terms('מה עושים כשיש חריגה')"
 ```
 
-`db:query` runs the query on a fresh copy of the database built from `data/` (about two seconds), so it never touches the database of a running server.
+`db:query` runs the query on a fresh copy of the database built from the saved answers of the site in `test/fixtures` (about two seconds), so it never touches the database of a running server.
+
+## The remote database
+
+With `DATABASE_URL` set, the API reads a PostgreSQL on Supabase instead of building PGlite at every start (the cold start of an instance falls from several seconds to the time of a connection). The project is shared with other apps, so **everything of ours is in the schema `takam_poc`** and nothing is created in `public`; `vector` (pgvector) is installed in the schema `extensions`.
+
+- `pnpm db:push` (`scripts/push-database.ts`, about 40 seconds from a laptop in France) drops our two tables, rebuilds them from `schema.sql` and fills them with `loadData` (the same loader as PGlite, the documents in one query), all in one transaction: the API waits a few seconds, then sees the new data, never a half filled database, and a failure keeps the old data. The schema `takam_poc` must exist and be usable (`USAGE`, `CREATE`) by the user of `DATABASE_URL`, who also needs `USAGE` on `extensions` to see the `vector` type; the table names in the script carry the schema so a bare name can never reach a table of another app. It reads the site first: if that fails, nothing is touched. The pipeline does not run it (the data is not part of a release): run it by hand.
+- The API opens a read-only transaction per query and sets `search_path` with `SET LOCAL`, because the pooler (transaction mode) may give the next query another connection. The certificate of the pooler is not verified (the traffic is encrypted; a proof of concept).
+- The pooler of the project is in `ap-northeast-2` (Seoul): `apps/server/vercel.json` runs the API in the same region (`icn1`) so the database is a few milliseconds away; the distance is paid once, between the browser and the API.

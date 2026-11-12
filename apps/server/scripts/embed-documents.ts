@@ -1,51 +1,30 @@
 /**
- * `pnpm data:embed [--chapter 1 | --all] [--force]`: turns the documents of one main chapter (default: 1), or every document (`--all`), into
- * embeddings with Gemini and writes them in `data/embeddings.json`, which the server loads into the column `documents.embedding` (pgvector).
+ * `pnpm data:embed [--force]`: gives a vector (Gemini, 768 numbers) to every document of the remote database (`DATABASE_URL`,
+ * schema `takam_poc`) that has none, and writes it in the column `documents.embedding` (pgvector). `--force` makes them all again.
  *
- * It reads only the fields of the site's own objects: title, description, keywords. Only what is new or whose text changed is
- * sent to Gemini (a hash of the text is kept next to each vector); a document that left the site loses its vector (`--force`
- * makes everything again), so the daily job can run it and pay only for what changed. The key is read from the environment and never written anywhere.
- * To see it in the search: `pnpm db:reset`, restart the server, tick "search by meaning" (or `?meaning=yes`).
+ * It reads only the fields of the site's own objects: title, description, keywords. A document that already has a vector keeps it,
+ * even when its text changed (for now), so a run pays only for what is new. The keys (GEMINI_API_KEY, DATABASE_URL) are read
+ * from the environment and never written anywhere. To see the result: tick "search by meaning" (or `?meaning=yes`).
  */
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { EMBEDDING_DIMENSIONS } from '../src/ai/embedding-dimensions';
+import type { PoolClient } from 'pg';
 import { GeminiProvider } from '../src/ai/providers/gemini.provider';
+import { createRemotePool } from '../src/database/create-remote-pool';
+import { REMOTE_SCHEMA } from '../src/database/remote-schema';
 
-interface SiteDocument {
-  readonly documentcodetext: string | null;
-  readonly mainchaptercode: number | null;
-  readonly name: string | null;
+interface DocumentText {
+  readonly code_text: string;
+  readonly title: string | null;
   readonly description: string | null;
   readonly keywords: string | null;
 }
 
-interface EmbeddingsFile {
-  model: string;
-  dimensions: number;
-  vectors: Record<string, number[]>;
-  /** The hash of the text each vector was made from: when the text changes, the vector is made again. */
-  hashes: Record<string, string>;
-}
-
-const DATA_FILE: string = join(__dirname, '..', 'data', 'embeddings.json');
 const BATCH_SIZE = 50;
 const provider = new GeminiProvider();
 
 /** What is embedded: the three text fields of the object, one per line. */
-function textOf(document: SiteDocument): string {
-  return [document.name, document.description, document.keywords].map((field) => (field ?? '').replace(/[‎‏]/g, '').trim()).filter((field) => field !== '').join('\n');
+function textOf(document: DocumentText): string {
+  return [document.title, document.description, document.keywords].map((field) => (field ?? '').trim()).filter((field) => field !== '').join('\n');
 }
-
-function readExisting(force: boolean): EmbeddingsFile {
-  const empty: EmbeddingsFile = { model: provider.embeddingModel, dimensions: EMBEDDING_DIMENSIONS, vectors: {}, hashes: {} };
-  if (force || !existsSync(DATA_FILE)) return empty;
-  const file = JSON.parse(readFileSync(DATA_FILE, 'utf8')) as EmbeddingsFile;
-  return file.model === provider.embeddingModel && file.dimensions === EMBEDDING_DIMENSIONS ? { ...file, hashes: file.hashes ?? {} } : empty;
-}
-
-const hashOf = (document: SiteDocument): string => createHash('sha1').update(textOf(document)).digest('hex');
 
 /** Gemini limits the requests per minute: when it says so (429), wait and ask again instead of stopping half way. */
 async function embedWithPatience(texts: string[]): Promise<number[][]> {
@@ -60,38 +39,40 @@ async function embedWithPatience(texts: string[]): Promise<number[][]> {
   }
 }
 
-async function main(): Promise<void> {
-  if (!provider.isConfigured()) throw new Error('Set GEMINI_API_KEY in the shell: GEMINI_API_KEY=... pnpm data:embed');
-  const chapterIndex: number = process.argv.indexOf('--chapter');
-  const chapter = Number(chapterIndex === -1 ? 1 : process.argv[chapterIndex + 1]);
-  const everything: boolean = process.argv.includes('--all');
-  const file: EmbeddingsFile = readExisting(process.argv.includes('--force'));
-  const all: SiteDocument[] = (JSON.parse(readFileSync(join(__dirname, '..', 'data', 'Document.json'), 'utf8')) as SiteDocument[]).filter((document) => document.documentcodetext && textOf(document) !== '');
-  const onTheSite = new Set(all.map((document) => document.documentcodetext as string));
-  for (const codeText of Object.keys(file.vectors)) {
-    if (!onTheSite.has(codeText)) {
-      delete file.vectors[codeText];
-      delete file.hashes[codeText];
-    }
-  }
-  // A vector without a hash (a file made before hashes existed) is taken as current, and gets its hash without a call.
-  for (const document of all) file.hashes[document.documentcodetext as string] ??= document.documentcodetext as string in file.vectors ? hashOf(document) : '';
-  const documents: SiteDocument[] = all.filter(
-    (document) => (everything || document.mainchaptercode === chapter) && (!((document.documentcodetext as string) in file.vectors) || file.hashes[document.documentcodetext as string] !== hashOf(document)),
+async function documentsToEmbed(connection: PoolClient, force: boolean): Promise<DocumentText[]> {
+  const { rows } = await connection.query<DocumentText>(
+    `SELECT code_text, title, description, keywords FROM ${REMOTE_SCHEMA}.documents ${force ? '' : 'WHERE embedding IS NULL'} ORDER BY id`,
   );
-  console.log(`${everything ? 'All chapters' : `Chapter ${chapter}`}: ${documents.length} documents to embed (${Object.keys(file.vectors).length} already done).`);
-  for (let start = 0; start < documents.length; start += BATCH_SIZE) {
-    const batch: SiteDocument[] = documents.slice(start, start + BATCH_SIZE);
-    const vectors: number[][] = await embedWithPatience(batch.map(textOf));
-    batch.forEach((document, index) => {
-      file.vectors[document.documentcodetext as string] = vectors[index];
-      file.hashes[document.documentcodetext as string] = hashOf(document);
-    });
-    writeFileSync(DATA_FILE, JSON.stringify(file));
-    console.log(`  ${Math.min(start + BATCH_SIZE, documents.length)} / ${documents.length}`);
+  return rows.filter((document) => textOf(document) !== '');
+}
+
+async function saveVectors(connection: PoolClient, batch: DocumentText[], vectors: number[][]): Promise<void> {
+  await connection.query(`BEGIN; SET LOCAL search_path TO ${REMOTE_SCHEMA}, extensions, public`);
+  await connection.query('UPDATE documents d SET embedding = v.embedding::vector FROM unnest($1::text[], $2::text[]) AS v(code_text, embedding) WHERE d.code_text = v.code_text', [
+    batch.map((document) => document.code_text),
+    vectors.map((vector) => `[${vector.join(',')}]`),
+  ]);
+  await connection.query('COMMIT');
+}
+
+async function main(): Promise<void> {
+  if (!provider.isConfigured()) throw new Error('Set GEMINI_API_KEY (in apps/server/.env or in the shell)');
+  const databaseUrl: string | undefined = process.env.DATABASE_URL;
+  if (databaseUrl === undefined || databaseUrl === '') throw new Error('Set DATABASE_URL (in apps/server/.env or in the shell): the vectors are written in the remote database');
+  const pool = createRemotePool(databaseUrl);
+  const connection: PoolClient = await pool.connect();
+  try {
+    const documents: DocumentText[] = await documentsToEmbed(connection, process.argv.includes('--force'));
+    console.log(`${documents.length} documents to embed.`);
+    for (let start = 0; start < documents.length; start += BATCH_SIZE) {
+      const batch: DocumentText[] = documents.slice(start, start + BATCH_SIZE);
+      await saveVectors(connection, batch, await embedWithPatience(batch.map(textOf)));
+      console.log(`  ${Math.min(start + BATCH_SIZE, documents.length)} / ${documents.length}`);
+    }
+  } finally {
+    connection.release();
+    await pool.end();
   }
-  writeFileSync(DATA_FILE, JSON.stringify(file));
-  console.log(`Done: ${Object.keys(file.vectors).length} documents in data/embeddings.json.`);
 }
 
 main().catch((error: unknown) => {

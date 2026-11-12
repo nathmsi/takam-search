@@ -54,8 +54,9 @@ No result is **not** an error: `GET /v1/documents?q=zzzz` answers `200` with `{ 
 | `PORT` | `3100` | Port of the API |
 | `CORS_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Allowed browser origins, comma separated |
 | `GEMINI_API_KEY` | none | **Secret.** In development put it in `apps/server/.env` (ignored by git; `pnpm dev` and `pnpm data:embed` read it). The key of the search by meaning (and of `pnpm data:embed`). Not set: the search by meaning falls back on the search by words |
-| `TAKAM_API_URL` | `https://takam.mof.gov.il/api` | The API of the Takam site, asked for the file of a document (and by `pnpm data:refresh`) |
+| `TAKAM_API_URL` | `https://takam.mof.gov.il/api` | The API of the Takam site, asked for the file of a document (and the address `pnpm db:push` reads the documents from) |
 | `AI_PROVIDER` | the first provider that has a key | Forces a provider (`gemini`) |
-| `DATABASE_DIR` | `apps/server/.pgdata` | Where the database lives; `memory://` keeps it in memory (the tests do) |
+| `DATABASE_DIR` | `apps/server/.pgdata` | Where the local database lives; `memory://` keeps it in memory (the tests do) |
+| `DATABASE_URL` | none | **A SECRET.** The address of a remote PostgreSQL (Supabase, pooler in transaction mode). Set, the server uses it instead of the local database, in the schema `takam_poc`, read-only, and builds nothing at start. Fill it with `pnpm db:push` |
 
 An invalid `PORT` stops the server at startup with a message. `GEMINI_API_KEY` is the only secret: never commit it.

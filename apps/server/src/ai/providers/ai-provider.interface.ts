@@ -12,7 +12,7 @@ export interface EmbedRequest {
  */
 export interface AiProvider {
   readonly name: string;
-  /** The model that makes the embeddings, written in `data/embeddings.json` so a file made by another model is never mixed in. */
+  /** The model that makes the embeddings. */
   readonly embeddingModel: string;
   /** True when the provider's API key is set. */
   isConfigured(): boolean;
